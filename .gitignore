@@ -1,0 +1,10 @@
+root/*
+res/*.zip
+zsound/
+*.PRG
+*.o
+*.s
+*.map
+*.sym
+imgui.ini
+sdcard.img
