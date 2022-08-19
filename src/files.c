@@ -3,6 +3,7 @@
 #include <string.h>
 #include <stdio.h>
 #include <stdint.h>
+#include <stdlib.h> // realloc()
 
 #define FILENAME_LEN 32
 
@@ -35,15 +36,20 @@ signed char chdir(char* dirname) {
 
 void get_zsm_list(itemlist* list) {
   struct cbm_dirent item;
-  if (cbm_opendir(21,8)) {
-    if (!cbm_readdir(21,item)) { // read but ignore volume header info
-      list->count=0;
-      list->active=0xff;
-      while(!cbm_readdir(21,item)) {
-        list->name[count] != NULL)
-
+  char l;
+  list->count=0;
+  list->active=0xff;
+  if (!cbm_opendir(1,8)) {
+    if (!cbm_readdir(1,&item)) { // read but ignore volume header info
+      while(!cbm_readdir(1,&item)) {
+        l = strlen(item.name);
+        if (l<5) continue;
+        if (strcmp(".zsm",item.name+l-4)!=0) continue;
+        list->name[list->count] = realloc(list->name[list->count],l+1);
+        strcpy(list->name[list->count],item.name);
+        ++list->count;
       }
     }
-    cbm_closedir(21);
+    cbm_closedir(1);
   }
 }

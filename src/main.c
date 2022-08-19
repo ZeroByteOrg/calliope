@@ -62,14 +62,15 @@ void init() {
   current_song=0;
   music_playing=0;
   music_loading=0;
-
-  files.name[0]="foo";
-  files.name[1]="bar";
-  files.name[2]="bat";
-  files.count=3;
-  files.active=0xff;
-  gotoxy(2,6);
-  print_list(&files,0,3);
+  get_zsm_list(&files);
+  if (files.count > 0)
+    files.active=0;
+  else
+    files.active=0xff;
+  files.scroll = 0;
+  draw_files();
+  gotoxy(0,29);
+  cprintf("%02d files",files.count);
 }
 
 void main() {
@@ -87,16 +88,7 @@ void main() {
         // not doing quality - leaving here as example of F-key handling...
         key=CH_ENTER;
       }
-#if(0)
-      if ((key >= 'a') && (key < 'a'+NUM_SOUNDS)) {
-        key -= 'a';
-        if (key!=current_sound) {
-          current_sound = key;
-          print_soundlist();
-        }
-        key=CH_ENTER;
-      }
-#endif
+
       if ((key >= '1') && (key < '1'+NUM_SONGS)) {
         key -= '1';
         if (key != current_song) {
@@ -115,6 +107,18 @@ void main() {
           key = CH_DEL; // just toggle
       }
       switch (key) {
+      case CH_CURS_DOWN:
+        if (files.active < files.count-1) {
+          ++files.active;
+          draw_files();
+        }
+        break;
+      case CH_CURS_UP:
+        if (files.active>0 && files.count>0) {
+          --files.active;
+          draw_files();
+        }
+        break;
       case CH_DEL:
         if (!music_playing) {
           zsm_startmusic(ZSMBANK,0xA000);

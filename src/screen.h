@@ -16,5 +16,6 @@ typedef struct window_s {
 extern void screen_init();
 extern void print_songlist();
 extern void print_list(itemlist* list, char start, char count);
+extern void draw_files();
 
 #endif

@@ -11,7 +11,7 @@ extern char current_song;
 extern char music_playing;
 extern char music_loading;
 
-char itemstr[9];
+char itemstr[10];
 
 unsigned long songsize[NUM_SONGS] = {
   187886,113061,96712,69166,101333,146480,138774,1706,910
@@ -48,9 +48,28 @@ void print_list(itemlist* list, char start, char count) {
   char i, x;
   x = wherex();
   for (i=start ; i<start+count ; i++) {
-    cprintf(itemstr,list->name[i]);
+    if (i<list->count) {
+      revers(i==list->active);
+      cprintf(itemstr,list->name[i]);
+      revers(0);
+    }
+    else {
+      cprintf(itemstr,blank);
+    }
     gotox(x);
   }
+}
+
+void draw_files() {
+  #define MM 12
+  gotoxy(2,6);
+  if (files.active < files.scroll)
+    files.scroll = files.active;
+  if (files.active - files.scroll >= MM)
+    files.scroll = files.active-MM+1;
+  print_list(&files,files.scroll,MM);
+  gotoxy(10,29);
+  cprintf("scroll:%02u  active=%02u",files.scroll,files.active);
 }
 
 void print_songlist() {
@@ -103,7 +122,7 @@ void screen_init() {
     memset(blank,' ',LIST_ITEM_SIZE);
     blank[LIST_ITEM_SIZE]=0;
   }
-  sprintf(itemstr," %%%us \n",LIST_ITEM_SIZE);
+  sprintf(itemstr," %%-%us \n",LIST_ITEM_SIZE);
   itemstr[8]=0;
   gotoxy(0,3);
   cprintf("directory: /");

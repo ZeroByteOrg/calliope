@@ -16,7 +16,9 @@ typedef struct item_s {
   char* name[LIST_MAX_SIZE];
   char count;
   char active;
+  char scroll;
 } itemlist;
 
+extern itemlist files;
 
 #endif
