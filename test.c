@@ -1,17 +1,13 @@
-#include <cbm.h>
 #include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
 
-extern signed char chdir(char* dirname);
-
-char foo[20] = "";
-char bar[20] = "this is a test";
+char foo[20] = "foo/bar";
+char bar[20] = "bar";
 
 void main() {
-  strcpy(foo,bar);
-  printf("%s (%d)\n",foo,strlen(foo));
-  printf("cd %-5s : %s\n","foo",chdir("foo") ? "success" : "fail");
-  printf("cd %-5s : %s\n","bar",chdir("bar") ? "success" : "fail");
-  printf("cd %-5s : %s\n","/bar",chdir("/bar") ? "success" : "fail");
+  printf("%s\n",foo);
+  strrchr(foo,'/')[0]=0;
+  bar[0]=0;
+  printf("%s\n",foo);
+  printf("%s\n",bar);
 }

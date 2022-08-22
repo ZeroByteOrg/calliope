@@ -13,99 +13,44 @@ extern char music_loading;
 
 char itemstr[10];
 
-unsigned long songsize[NUM_SONGS] = {
-  187886,113061,96712,69166,101333,146480,138774,1706,910
-};
-
-const char* dir[NUM_QUALITY] = {
-  "zcmorig", "zcm22k16", "zcm8k16", "zcm22k8", "zcm16k8", "zcm8k8"
-//  "zcm8k16", "zcm22k8"
-};
-const char* qual[NUM_QUALITY] = {
-  "48khz 16bit", "22khz 16bit", "8khz 16bit", "22khz 8bit", "16khz 8bit",
-  "8khz 8bit"
-//  "8khz 16bit", "22khz 8bit"
-};
-
-const char* qualshort[NUM_QUALITY] = {
-  "48khz", "22khz", " 8khz", "22khz", "16khz", " 8khz"
-};
-
-const char* zsmname[NUM_SONGS] = {
-  "main.zsm", "levela.zsm", "levelb.zsm", "levelc.zsm",
-  "leveld.zsm", "levele.zsm", "levelf.zsm", "win.zsm",
-  "lose.zsm"
-};
-
-const char* songname[NUM_SONGS] = {
-  "main theme", "level a", "level b", "level c", "level d",
-  "level e", "level f", "you win", "you lose"
-};
-
 char* blank = NULL;
 
-void print_list(itemlist* list, char start, char count) {
-  char i, x;
-  x = wherex();
+void print_list(itemlist* list, char count) {
+  char i;
+  char start=0;
+  gotoxy(list->x,list->y);
+  if (list->count >= 1) {
+    if (list->active < list->scroll)
+      list->scroll = list->active;
+    if (list->active - list->scroll >= count)
+      list->scroll = list->active-count+1;
+    start = list->scroll;
+  }
+
   for (i=start ; i<start+count ; i++) {
-    if (i<list->count) {
-      revers(i==list->active);
+    if (i<list->count && list->count > 0) {
+//    if (i<list->count) {
+      if(selected == list)
+        revers(i==list->active);
       cprintf(itemstr,list->name[i]);
       revers(0);
     }
     else {
       cprintf(itemstr,blank);
     }
-    gotox(x);
+    gotox(list->x);
   }
-}
-
-void draw_files() {
-  #define MM 12
-  gotoxy(2,6);
-  if (files.active < files.scroll)
-    files.scroll = files.active;
-  if (files.active - files.scroll >= MM)
-    files.scroll = files.active-MM+1;
-  print_list(&files,files.scroll,MM);
   gotoxy(10,29);
-  cprintf("scroll:%02u  active=%02u",files.scroll,files.active);
+  cprintf("scroll:%02u  active=%02u",selected->scroll,selected->active);
 }
 
-void print_songlist() {
-  #define SONGX 42
-  #define SONGY 10
-  #define SONGNAME "%-12s"
-
-  char i;
-
-  for (i=0 ; i<NUM_SONGS ; i++) {
-    gotoxy(SONGX,SONGY+i);
-    cprintf("%u: ",i+1);
-    if (i==current_song) {
-      revers(1);
-      if (music_playing)
-        textcolor(COLOR_LIGHTGREEN);
-      if (music_loading)
-        textcolor(COLOR_ORANGE);
-      cprintf(SONGNAME,songname[i]);
-      cprintf(" %6lu bytes",songsize[i]);
-      revers(0);
-      if (music_loading)
-        cprintf(" loading");
-      else
-        cprintf("        ");
-      textcolor(COLOR_WHITE);
-    }
-    else {
-      cprintf(SONGNAME,songname[i]);
-      cprintf(" %6lu bytes",songsize[i]);
-    }
-    revers(0);
-    textcolor(COLOR_WHITE);
-  }
-  gotoxy(SONGX,wherey()+2);
-  cprintf("press backspace to toggle music");
+void draw_path() {
+  gotoxy(0,3);
+  cprintf("directory: %s%s",workdir.root,workdir.path);
+  do {
+    cprintf(" ");
+    if(wherex()==79) break;
+  } while(1);
 }
 
 void screen_init() {
@@ -124,6 +69,5 @@ void screen_init() {
   }
   sprintf(itemstr," %%-%us \n",LIST_ITEM_SIZE);
   itemstr[8]=0;
-  gotoxy(0,3);
-  cprintf("directory: /");
+  draw_path();
 }
