@@ -13,6 +13,8 @@
 #define LIST_ITEM_SIZE 18
 #define LIST_Y 6
 
+#define LAZY_LFN 14 // LFN the lazy loader should use
+
 typedef struct item_s {
   char* name[LIST_MAX_SIZE];
   char count;

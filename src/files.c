@@ -9,6 +9,12 @@
 
 struct workdir_s workdir;
 
+char ll_bank;
+char* ll_addr;
+
+extern int __fastcall__ macptr(char nbytes, void* addr);
+// defined in macptr.asm
+
 char* bload(const char* filename,const void* address) {
   // loads with current HiRAM bank = the one we want.
   // Even if it's not, it's the one we're gonna get! :)
@@ -25,7 +31,7 @@ void go_root() {
   }
 }
 
-signed char chdir(char* dirname) {
+signed char chdir(const char* dirname) {
   char cmd_buffer[FILENAME_LEN];
 
   // reset string length to 0
@@ -95,4 +101,30 @@ signed char get_dir_list(itemlist* list) {
   }
   if (list->count) return root;
   else return 0;
+}
+
+char init_lazy_load(const char* path, const char* filename, char bank, void* addr) {
+	go_root();
+	if(!chdir(path)) return 0;
+	cbm_open(LAZY_LFN,8,LAZY_LFN,filename);
+	ll_bank = bank;
+	ll_addr = (char*)addr;
+	go_root();
+	chdir(workdir.path);
+	return 1;
+}
+
+int lazy_load() {
+	char b;
+	int n=0;
+	if (!cbm_k_chkin(LAZY_LFN)) {
+		b=RAM_BANK;
+		RAM_BANK = ll_bank;
+		n=macptr(0, ll_addr);
+		ll_addr += n;
+		if (ll_addr >= (char*)0xc000) ll_addr -= 0x2000;
+		ll_bank =RAM_BANK;
+		RAM_BANK = ll_bank;
+	}
+	return n;
 }

@@ -20,6 +20,7 @@ typedef struct window_s {
 
 extern void screen_init();
 extern void print_list(itemlist* list, char count);
+extern void print_loading(char loading);
 extern void draw_path();
 
 #endif

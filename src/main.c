@@ -19,8 +19,12 @@ extern void remove_irq();
 
 // function prototypes
 void music_looped(uint8_t playing, uint8_t remaining);
-void load_song(char* filename);
+void load_song(const char* filename);
+void select_folder(const char* folder);
 void init();
+
+extern char ll_bank;
+extern char* ll_addr;
 
 char current_song;
 char music_playing;
@@ -38,15 +42,11 @@ void music_looped(uint8_t playing, uint8_t remaining) {
   }
 }
 
-void load_song(char* filename) {
+void load_song(const char* filename) {
   music_loading = 1;
 }
 
-signed char set_pwd(char*) {
-  return 0;
-}
-
-void select_folder(char* folder) {
+void select_folder(const char* folder) {
   if (!chdir(folder)) return;
   if (strcmp("..",folder)==0) {
     // chdir up
@@ -148,13 +148,29 @@ void main() {
         if (selected==&dirs)
           select_folder(dirs.name[dirs.active]);
         else if (selected==&files) {
-
+          zsm_stopmusic();
+          if (init_lazy_load(workdir.path,files.name[files.active],1,(void*)0xa000)) {
+            lazy_load();
+            print_loading(1);
+            __asm__ ("sei");
+            zsm_startmusic(1,0xa000);
+            *(char*)0x0025 = 4;
+            __asm__ ("cli");
+          }
+          else music_playing = 0;
         }
         key=0;
         break;
       default:
         break;
       }
+
+    }
+    gotoxy(0,28);
+    cprintf("$%02x:%04x $%02x:%04x",ll_bank,(unsigned int)ll_addr,*(char*)0x0024,*(unsigned int*)0x0022);
+    if(lazy_load()<1) {
+      cbm_close(LAZY_LFN);
+      print_loading(0);
     }
   }
   remove_irq();

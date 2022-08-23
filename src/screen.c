@@ -53,6 +53,17 @@ void draw_path() {
   } while(1);
 }
 
+void print_loading(char loading) {
+  gotoxy(35,0);
+  if (loading) {
+    revers(1);
+    cprintf("loading");
+    revers(0);
+  }
+  else
+    cprintf("       ");
+}
+
 void screen_init() {
   unsigned char i;
   videomode(VIDEOMODE_80x30);
