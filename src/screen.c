@@ -15,8 +15,9 @@ char itemstr[10];
 
 char* blank = NULL;
 
-void print_list(itemlist* list, char count) {
+void print_list(itemlist* list) {
   char i;
+  char count = list->len;
   char start=0;
   gotoxy(list->x,list->y);
   if (list->count >= 1) {
@@ -29,7 +30,6 @@ void print_list(itemlist* list, char count) {
 
   for (i=start ; i<start+count ; i++) {
     if (i<list->count && list->count > 0) {
-//    if (i<list->count) {
       if(selected == list)
         revers(i==list->active);
       cprintf(itemstr,list->name[i]);
@@ -45,11 +45,11 @@ void print_list(itemlist* list, char count) {
 }
 
 void draw_path() {
-  gotoxy(0,3);
+  gotoxy(0,2);
   cprintf("directory: %s%s",workdir.root,workdir.path);
   do {
     cprintf(" ");
-    if(wherex()==79) break;
+    if(wherex()==78) break;
   } while(1);
 }
 
@@ -67,12 +67,16 @@ void print_loading(char loading) {
 void screen_init() {
   unsigned char i;
   videomode(VIDEOMODE_80x30);
+  VERA.control |= 0x02; // DCSEL=1
+  VERA.display.hstart=8>>2;
+  VERA.display.hstop=(640-8)>>2;
+  VERA.control &= ~0x02; // DCSEL=0
   clrscr();
   cbm_k_bsout(CH_FONT_UPPER);
   gotoxy (0,0);
   cprintf("calliope music player");
   gotoxy (0,1);
-  for (i=0 ; i<80 ; i++) cputc('-');
+  for (i=0 ; i<78 ; i++) cputc('-');
   if (blank == NULL) {
     blank = malloc(LIST_ITEM_SIZE+1);
     memset(blank,' ',LIST_ITEM_SIZE);

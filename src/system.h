@@ -11,7 +11,7 @@
 
 #define LIST_MAX_SIZE 128
 #define LIST_ITEM_SIZE 18
-#define LIST_Y 6
+#define LIST_Y 5
 
 #define LAZY_LFN 14 // LFN the lazy loader should use
 
@@ -22,6 +22,7 @@ typedef struct item_s {
   char scroll;
   char x;
   char y;
+  char len;
 } itemlist;
 
 #define FILENAME_LEN 32
@@ -35,7 +36,7 @@ struct workdir_s {
 
 extern struct workdir_s workdir;
 
-extern itemlist files, dirs, playlist;
+extern itemlist files, dirs, playlist, play_paths;
 extern itemlist *selected;
 
 #endif

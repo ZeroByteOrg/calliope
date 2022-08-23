@@ -11,5 +11,6 @@ extern signed char get_dir_list(itemlist* list); // returns 1 if FS root dir
 
 extern int lazy_load();
 extern char init_lazy_load(const char* path, const char* filename, char bank, void* addr);
+extern char load(const char* path, const char* filename, char bank, void* addr);
 
 #endif

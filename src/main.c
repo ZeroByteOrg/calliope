@@ -1,6 +1,7 @@
 #include "zsmplayer.h"
 #include "files.h"
 #include "screen.h"
+#include "playlist.h"
 #include <conio.h>
 #include <cbm.h>
 #include <string.h>
@@ -77,13 +78,29 @@ void init() {
   zsm_init();
   zsm_setcallback(&music_looped);
   install_irq();
+  VERA.irq_raster = 0;    // trigger line IRQ at line 0 for "perf meter"
+  VERA.irq_enable = 0x03; // enable VSYNC and LINE IRQs
   current_song=0;
   music_playing=0;
   music_loading=0;
-  dirs.x = 1;
-  dirs.y = LIST_Y;
-  files.x = 22;
-  files.y = LIST_Y;
+  dirs.x=0;
+  dirs.y=LIST_Y;
+  dirs.len=6;
+  files.x=dirs.x;
+  files.y=dirs.y + dirs.len + 4;
+  files.len=12;
+  playlist.x=22;
+  playlist.y=LIST_Y;
+  playlist.count=0;
+  playlist.scroll=0;
+  playlist.active=0;
+  playlist.len=22;
+  play_paths.x=playlist.x+21;
+  play_paths.y=playlist.y;
+  play_paths.count=0;
+  play_paths.scroll=0;
+  play_paths.active=0;
+  play_paths.len=playlist.len;
   if (get_dir_list(&dirs))
     strcpy(workdir.root,"/");
   else
@@ -91,13 +108,14 @@ void init() {
   get_zsm_list(&files);
   selected = &dirs;
   screen_init();
-  print_list(&dirs,12);
-  print_list(&files,12);
+  draw_dirs();
+  draw_files();
   gotoxy(0,29);
   cprintf("%02d files",files.count);
 }
 
 void main() {
+  itemlist *prev;
   char key;
   char run=1;
   init();
@@ -105,8 +123,8 @@ void main() {
   while(run) {
     if(kbhit()) {
       key=cgetc();
-      gotoxy(78,0);
-      cprintf("%u",key);
+      gotoxy(76,0);
+      cprintf("%3u",key);
       if ((key >= CH_F1) && (key < CH_F8)) {
         key = fkey_map[key-CH_F1];
         // not doing quality - leaving here as example of F-key handling...
@@ -117,6 +135,7 @@ void main() {
         // do stuff with number keys....
       }
       switch (key) {
+      case CH_CURS_RIGHT:
       case 9: // TAB
         if (selected==&files)
           selected=&dirs;
@@ -125,16 +144,26 @@ void main() {
         draw_files();
         draw_dirs();
         break;
+        case CH_CURS_LEFT:
+        case CH_SHIFT_TAB:
+          prev = selected;
+          if (selected==&files)
+            selected=&dirs;
+          else if (selected==&dirs)
+            selected=&files;
+          print_list(prev);
+          print_list(selected);
+          break;
       case CH_CURS_DOWN:
         if (selected->active < selected->count-1) {
           ++selected->active;
-          print_list(selected,12);
+          print_list(selected);
         }
         break;
       case CH_CURS_UP:
         if (selected->active>0 && selected->count>0) {
           --selected->active;
-          print_list(selected,12);
+          print_list(selected);
         }
         break;
       case CH_STOP:
@@ -158,8 +187,24 @@ void main() {
             __asm__ ("cli");
           }
           else music_playing = 0;
+          playlist_add(workdir.path, files.name[files.active]);
+          draw_playlist();
         }
         key=0;
+        break;
+      case 141: // shift+enter
+        if (selected==&files) {
+          zsm_stopmusic();
+          print_loading(1);
+          selected=NULL;
+          draw_files();
+          if (load(workdir.path,files.name[files.active],1,(void*)0xa000)) {
+            zsm_startmusic(1,0xa000);
+          }
+          selected=&files;
+          print_loading(0);
+          draw_files();
+        }
         break;
       default:
         break;
@@ -173,6 +218,7 @@ void main() {
       print_loading(0);
     }
   }
+  VERA.irq_enable = 0x01; // disable raster line IRQs
   remove_irq();
   zsm_stopmusic();
   gotoxy(0,29);

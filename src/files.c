@@ -12,6 +12,8 @@ struct workdir_s workdir;
 char ll_bank;
 char* ll_addr;
 
+char ll_working=0;
+
 extern int __fastcall__ macptr(char nbytes, void* addr);
 // defined in macptr.asm
 
@@ -104,19 +106,23 @@ signed char get_dir_list(itemlist* list) {
 }
 
 char init_lazy_load(const char* path, const char* filename, char bank, void* addr) {
+  ll_working = 0;
 	go_root();
-	if(!chdir(path)) return 0;
-	cbm_open(LAZY_LFN,8,LAZY_LFN,filename);
-	ll_bank = bank;
-	ll_addr = (char*)addr;
-	go_root();
-	chdir(workdir.path);
-	return 1;
+	if(chdir(path)) {
+  	cbm_open(LAZY_LFN,8,LAZY_LFN,filename);
+  	ll_bank = bank;
+  	ll_addr = (char*)addr;
+  	go_root();
+  	chdir(workdir.path);
+    ll_working = 1;
+  }
+	return ll_working;
 }
 
 int lazy_load() {
 	char b;
 	int n=0;
+  if (!ll_working) return 0;
 	if (!cbm_k_chkin(LAZY_LFN)) {
 		b=RAM_BANK;
 		RAM_BANK = ll_bank;
@@ -127,4 +133,21 @@ int lazy_load() {
 		RAM_BANK = ll_bank;
 	}
 	return n;
+}
+
+char load(const char* path, const char* filename, char bank, void* addr) {
+  char b,b1;
+  char* a;
+  go_root();
+  if(!chdir(path)) return 0;
+  b = RAM_BANK;
+  RAM_BANK=bank;
+  a=ll_addr;
+  b1=RAM_BANK;
+  ll_addr=bload(filename,addr);
+  ll_bank=RAM_BANK;
+  RAM_BANK = b;
+  go_root();
+  chdir(workdir.path);
+  return (b1 != ll_bank || a != ll_addr);
 }

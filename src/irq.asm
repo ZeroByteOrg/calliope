@@ -7,10 +7,19 @@
 
 .code
 .proc irqhandler: near
-  lda #$01
-  and VERA_isr
+  lda #$02 ; check for VERA Line IRQ
+  bit VERA_isr
   beq DONE
+  ; this is a VERA line IRQ. ACK and process before RTI
+  sta VERA_isr
+  lda #5 ; green
+  sta VERA_dc_border
   jsr playmusic_IRQ
+  stz VERA_dc_border
+  ply
+  plx
+  pla
+  rti
 DONE:
   jmp $ffff
 .endproc
