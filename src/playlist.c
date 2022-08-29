@@ -35,6 +35,7 @@ void playlist_add(char* path, char* file) {
   if (s != NULL) free(s);
   play_paths.name[n] = tmp2;
   ++play_paths.count;
+  playlist.redraw=1;
 }
 
 void playlist_remove(char item) {
@@ -48,4 +49,7 @@ void playlist_remove(char item) {
   }
   --playlist.count;
   --play_paths.count;
+  if (playlist.active >= playlist.count)
+    playlist.active = playlist.count-1;
+  playlist.redraw=1;
 }

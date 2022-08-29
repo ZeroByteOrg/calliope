@@ -36,6 +36,8 @@ void go_root() {
 signed char chdir(const char* dirname) {
   char cmd_buffer[FILENAME_LEN];
 
+	if (strlen(dirname)==0) return 1;
+	if (strlen(dirname)==1 && dirname[0]=='.') return 1;
   // reset string length to 0
   cmd_buffer[0]=0;
   strcat(cmd_buffer,"cd:");
@@ -58,6 +60,7 @@ void get_zsm_list(itemlist* list) {
   list->count=0;
   list->scroll=0;
   list->active=0xff;
+	list->redraw=1;
   if (!cbm_opendir(1,8)) {
     if (!cbm_readdir(1,&item)) { // read but ignore volume header info
       while(!cbm_readdir(1,&item)) {
@@ -83,6 +86,7 @@ signed char get_dir_list(itemlist* list) {
   list->count=0;
   list->scroll=0;
   list->active=0;
+	list->redraw=1;
   if (!cbm_opendir(1,8)) {
     if (!cbm_readdir(1,&item)) { // read but ignore volume header info
       while(!cbm_readdir(1,&item)) {
@@ -106,16 +110,19 @@ signed char get_dir_list(itemlist* list) {
 }
 
 char init_lazy_load(const char* path, const char* filename, char bank, void* addr) {
+	if (ll_working) {
+		cbm_close(LAZY_LFN);
+	}
   ll_working = 0;
 	go_root();
 	if(chdir(path)) {
-  	cbm_open(LAZY_LFN,8,LAZY_LFN,filename);
+  	if (cbm_open(LAZY_LFN,8,LAZY_LFN,filename)!=0) return 0;
   	ll_bank = bank;
   	ll_addr = (char*)addr;
   	go_root();
-  	chdir(workdir.path);
     ll_working = 1;
   }
+	chdir(workdir.path);
 	return ll_working;
 }
 

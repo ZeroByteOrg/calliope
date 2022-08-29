@@ -34,8 +34,8 @@ all: $(TARGET) $(MEDIA)
 
 media: $(MEDIA)
 
-sdcard: $(TARGET) $(MEDIA)
-	mcopy -s -o $(DIR_BIN)/* $(MDRIVE)
+sdcard: $(TARGET)
+#	mcopy -s -o $(DIR_BIN)/* $(MDRIVE)
 	mcopy -o $(TARGET) $(MDRIVE)/AUTOBOOT.X16
 
 clean:

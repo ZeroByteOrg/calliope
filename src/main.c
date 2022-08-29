@@ -22,7 +22,8 @@ extern void remove_irq();
 void music_looped(uint8_t playing, uint8_t remaining);
 void load_song(const char* filename);
 void select_folder(const char* folder);
-void init();
+void changelist(signed char forward);
+char init();
 
 extern char ll_bank;
 extern char* ll_addr;
@@ -33,9 +34,13 @@ char music_loading;
 itemlist dirs, files, playlist, play_paths;
 itemlist *selected;
 
+struct tab_s tabs;
+
 const char fkey_map[8] = { 0, 2, 3, 5, 1, 9, 4, 0};
                       //  F1 F3 F5 F7 F2 F4 F6 F8
                       //  85 86 87 88 89 8A 8B 8C
+
+const itemlist* pannels[3] = { &dirs, &files, &playlist };
 
 void music_looped(uint8_t playing, uint8_t remaining) {
   if (!playing) {
@@ -68,13 +73,38 @@ void select_folder(const char* folder) {
   get_dir_list(&dirs);
   get_zsm_list(&files);
   draw_path();
-  draw_files();
-  draw_dirs();
+  screen_update();
 }
 
-void init() {
+void changelist(signed char forward) {
+  if (forward==0)
+    forward=-1;
+  else
+    forward=1;
+  tabs.last = tabs.selected;
+  do {
+    tabs.selected += forward;
+    if (tabs.selected < 0) tabs.selected = TAB_COUNT-1;
+    if (tabs.selected >= TAB_COUNT) tabs.selected=0;
+    if (tabs.list[tabs.selected]->count > 0) break;
+  } while(tabs.last != tabs.selected);
+  if (tabs.selected != tabs.last) screen_update();
+}
+
+char init() {
+  cbm_k_bsout(CH_FONT_UPPER);
   workdir.depth = 0;
   workdir.path[0] = 0;
+  if (get_dir_list(&dirs))
+    strcpy(workdir.root,"/");
+  else
+    strcpy(workdir.root,"./");
+  get_zsm_list(&files);
+  if (files.count==0 && dirs.count==0) return 0;
+  tabs.list[TAB_DIRS]=&dirs;
+  tabs.list[TAB_FILES]=&files;
+  tabs.list[TAB_PLAYLIST]=&playlist;
+  tabs.selected=TAB_PLAYLIST;
   zsm_init();
   zsm_setcallback(&music_looped);
   install_irq();
@@ -83,42 +113,28 @@ void init() {
   current_song=0;
   music_playing=0;
   music_loading=0;
-  dirs.x=0;
-  dirs.y=LIST_Y;
-  dirs.len=6;
-  files.x=dirs.x;
-  files.y=dirs.y + dirs.len + 4;
-  files.len=12;
-  playlist.x=22;
-  playlist.y=LIST_Y;
   playlist.count=0;
   playlist.scroll=0;
   playlist.active=0;
-  playlist.len=22;
-  play_paths.x=playlist.x+21;
-  play_paths.y=playlist.y;
   play_paths.count=0;
   play_paths.scroll=0;
   play_paths.active=0;
-  play_paths.len=playlist.len;
-  if (get_dir_list(&dirs))
-    strcpy(workdir.root,"/");
-  else
-    strcpy(workdir.root,"./");
-  get_zsm_list(&files);
-  selected = &dirs;
   screen_init();
-  draw_dirs();
-  draw_files();
+  changelist(1);
   gotoxy(0,29);
   cprintf("%02d files",files.count);
+  return 1;
 }
 
+
 void main() {
-  itemlist *prev;
   char key;
   char run=1;
-  init();
+  if (!init()) {
+    clrscr();
+    cprintf ("sorry - no zsm files or folders found.\n\r");
+    return;
+  }
   CLEAR_INPUT;
   while(run) {
     if(kbhit()) {
@@ -134,36 +150,28 @@ void main() {
         key -= '1';
         // do stuff with number keys....
       }
+      selected = tabs.list[tabs.selected];
       switch (key) {
       case CH_CURS_RIGHT:
       case 9: // TAB
-        if (selected==&files)
-          selected=&dirs;
-        else if (selected==&dirs)
-          selected=&files;
-        draw_files();
-        draw_dirs();
+        changelist(1);
         break;
-        case CH_CURS_LEFT:
-        case CH_SHIFT_TAB:
-          prev = selected;
-          if (selected==&files)
-            selected=&dirs;
-          else if (selected==&dirs)
-            selected=&files;
-          print_list(prev);
-          print_list(selected);
-          break;
+      case CH_CURS_LEFT:
+      case CH_SHIFT_TAB:
+        changelist(0);
+        break;
       case CH_CURS_DOWN:
         if (selected->active < selected->count-1) {
           ++selected->active;
-          print_list(selected);
+          selected->redraw = 1;
+          screen_update();
         }
         break;
       case CH_CURS_UP:
         if (selected->active>0 && selected->count>0) {
           --selected->active;
-          print_list(selected);
+          selected->redraw=1;
+          screen_update();
         }
         break;
       case CH_STOP:
@@ -174,9 +182,9 @@ void main() {
         music_playing = 0;
         break;
       case CH_ENTER:
-        if (selected==&dirs)
+        if (tabs.selected==TAB_DIRS)
           select_folder(dirs.name[dirs.active]);
-        else if (selected==&files) {
+        else if (tabs.selected==TAB_FILES) {
           zsm_stopmusic();
           if (init_lazy_load(workdir.path,files.name[files.active],1,(void*)0xa000)) {
             lazy_load();
@@ -185,25 +193,28 @@ void main() {
             zsm_startmusic(1,0xa000);
             *(char*)0x0025 = 4;
             __asm__ ("cli");
+            playlist_add(workdir.path, files.name[files.active]);
+            playlist.redraw=1;
           }
           else music_playing = 0;
-          playlist_add(workdir.path, files.name[files.active]);
-          draw_playlist();
+          screen_update();
         }
         key=0;
         break;
       case 141: // shift+enter
-        if (selected==&files) {
+        if (tabs.selected==TAB_FILES) {
           zsm_stopmusic();
           print_loading(1);
-          selected=NULL;
-          draw_files();
+          files.redraw=1;
+          tabs.selected=TAB_COUNT; // "null"
+          screen_update();
           if (load(workdir.path,files.name[files.active],1,(void*)0xa000)) {
             zsm_startmusic(1,0xa000);
           }
-          selected=&files;
+          tabs.selected=TAB_FILES;
+          files.redraw=1;
           print_loading(0);
-          draw_files();
+          screen_update();
         }
         break;
       default:
@@ -221,5 +232,6 @@ void main() {
   VERA.irq_enable = 0x01; // disable raster line IRQs
   remove_irq();
   zsm_stopmusic();
+  go_root();
   gotoxy(0,29);
 }
