@@ -1,5 +1,9 @@
+// Test program for new list printing / data structures.
+
 #include <stdio.h>
 #include <string.h>
+#include <cbm.h>
+#include "lists.h"
 
 char foo[20] = "foo/bar";
 char bar[20] = "bar";
