@@ -6,7 +6,8 @@
 #define LIST_MAX_SIZE 128
 
 typedef struct {
-  uint8_t count, selected, active;
+  uint8_t count;
+  uint8_t namelen;
   char* name[LIST_MAX_SIZE];
 } itemlist;
 

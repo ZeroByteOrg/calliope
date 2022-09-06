@@ -1,8 +1,11 @@
 #include "files.h"
+#include "lists.h"
 #include <cbm.h>
 #include <string.h>
+
 #include <stdio.h>
 #include <stdint.h>
+#include <stdlib.h> // realloc()
 
 #define FILENAME_LEN 32
 
@@ -56,26 +59,36 @@ signed char chdir(const char* dirname) {
 void get_zsm_list(itemlist* list) {
   struct cbm_dirent item;
   char l;
-	list_clear(list);
+  list->count=0;
+  list->scroll=0;
+  list->active=0xff;
+	list->redraw=1;
   if (!cbm_opendir(1,8)) {
     if (!cbm_readdir(1,&item)) { // read but ignore volume header info
       while(!cbm_readdir(1,&item)) {
         l = strlen(item.name);
         if (l<5) continue;
         if (strcmp(".zsm",item.name+l-4)!=0) continue;
-				list_add(list,item.name);
+        list->name[list->count] = realloc(list->name[list->count],l+1);
+        strcpy(list->name[list->count],item.name);
+        ++list->count;
       }
+      if (list->count)
+        list->active=0;
     }
     cbm_closedir(1);
-		list_sort(list);
   }
 }
 
 signed char get_dir_list(itemlist* list) {
   struct cbm_dirent item;
+  char l;
   signed char root = 1;
 
-	list_clear(list);
+  list->count=0;
+  list->scroll=0;
+  list->active=0;
+	list->redraw=1;
   if (!cbm_opendir(1,8)) {
     if (!cbm_readdir(1,&item)) { // read but ignore volume header info
       while(!cbm_readdir(1,&item)) {
@@ -86,13 +99,14 @@ signed char get_dir_list(itemlist* list) {
           // disallow CD.. from initial directory
           if (workdir.depth == 0) continue;
         }
-				list_add(list, item.name);
+        l = strlen(item.name);
+        list->name[list->count] = realloc(list->name[list->count],l+1);
+        strcpy(list->name[list->count],item.name);
+        ++list->count;
       }
     }
     cbm_closedir(1);
   }
-	list_sort(list);
-	list_move(list, list_index(list, ".."), 0);
   if (list->count) return root;
   else return 0;
 }

@@ -1,0 +1,164 @@
+#include <stdio.h>
+#include <conio.h>
+#include <cbm.h>
+#include "lists.h"
+#include "screen.h"
+#include "input.h"
+
+enum selectionmoves {
+  SEL_UP,
+  SEL_DOWN,
+  SEL_LEFT,
+  SEL_RIGHT,
+  SEL_TOP,
+  SEL_BOTTOM,
+  SEL_PGUP,
+  SEL_PGDN,
+  SEL_FIRST,
+  SEL_LAST
+};
+
+panel testpanel;
+itemlist foo;
+
+// function prototypes
+void init();
+void panel_selection_move(panel* p, char change);
+
+void main() {
+  char key;
+  cbm_k_chrout(CH_FONT_UPPER);
+  init();
+  list_clear(&foo);
+  list_add(&foo,"apple");
+  list_add(&foo,"orange");
+  list_add(&foo,"banana");
+  list_add(&foo,"pear");
+  list_add(&foo,"lemon");
+  list_add(&foo,"grapefruit");
+  list_add(&foo,"grape");
+  list_add(&foo,"kiwi");
+  list_add(&foo,"mango");
+  list_add(&foo,"lime");
+  list_add(&foo,"cherry");
+  list_add(&foo,"peach");
+  list_add(&foo,"tangerine");
+  list_add(&foo,"cabbage");
+  list_add(&foo,"broccoli");
+  list_add(&foo,"spinach");
+  list_add(&foo,"potato");
+  list_add(&foo,"lima");
+  list_add(&foo,"sprout");
+  list_add(&foo,"collard");
+  list_add(&foo,"turnip");
+  list_add(&foo,"celery");
+  list_add(&foo,"chive");
+  list_add(&foo,"corn");
+  list_add(&foo,"steak");
+
+  panel_init(&testpanel, &foo, 17, 17, 36, 5);
+  testpanel.numCols=3;
+  panel_draw(&testpanel);
+  while(1) {
+    // szound goes here
+    if(kbhit()) {
+      key=cgetc();
+      #define CH_PGUP       130
+      #define CH_PGDN         2
+      #define CH_TAB          9
+      #define CH_SHIFT_HOME 147
+      #define CH_END          4
+      #define CH_SHIFT_END  132
+      switch(key) {
+        case CH_CURS_UP:
+          panel_selection_move(&testpanel, SEL_UP);
+          break;
+        case CH_CURS_DOWN:
+          panel_selection_move(&testpanel, SEL_DOWN);
+          break;
+        case CH_CURS_LEFT:
+          panel_selection_move(&testpanel, SEL_LEFT);
+          break;
+        case CH_CURS_RIGHT:
+          panel_selection_move(&testpanel, SEL_RIGHT);
+          break;
+        case CH_HOME:
+          panel_selection_move(&testpanel, SEL_TOP);
+          break;
+        case CH_END:
+          panel_selection_move(&testpanel, SEL_BOTTOM);
+          break;
+        case CH_SHIFT_HOME:
+          panel_selection_move(&testpanel, SEL_FIRST);
+          break;
+        case CH_SHIFT_END:
+          panel_selection_move(&testpanel, SEL_LAST);
+          break;
+        case CH_PGUP:
+          panel_selection_move(&testpanel, SEL_PGUP);
+          break;
+        case CH_PGDN:
+          panel_selection_move(&testpanel, SEL_PGDN);
+          break;
+      }
+      gotoxy(77,0);
+      cprintf("%03u",key);
+    }
+  }
+}
+
+void init() {
+}
+
+void panel_selection_move(panel* p, char change) {
+  uint8_t step,mod,newselect;
+
+  step = p->list->count/p->numCols + 1; // how much to +/- for moving L/R
+  mod  = p->selection % (step);         // "row" of selection
+  newselect = p->selection;             // default to current selection.
+  switch (change) {
+    case SEL_UP:
+      if (mod != 0) --newselect;
+      break;
+    case SEL_DOWN:
+      if (mod+1 < p->list->count && mod+1 < step) ++newselect;
+      break;
+    case SEL_LEFT:
+      if (newselect - step >= 0) newselect -= step;
+      break;
+    case SEL_RIGHT:
+      if (newselect + step < p->list->count) newselect += step;
+      break;
+    case SEL_TOP:
+      newselect -= mod; // move to top of column
+      break;
+    case SEL_BOTTOM:
+      newselect = newselect - mod + step - 1; // move to bottom of column
+      if (newselect >= p->list->count) newselect = p->list->count-1;
+      break;
+    case SEL_PGUP:
+      if (mod - p->h >= 0)
+        newselect = newselect - p->h;
+      else
+        newselect -= mod;
+      break;
+    case SEL_PGDN:
+      if (mod+p->h < step)
+        newselect += p->h;
+      else
+        newselect = step-1;
+      if (newselect >= p->list->count) newselect = p->list->count-1;
+      p->scroll += p->h + 1;
+      if (p->scroll >= step-1) p->scroll=step-1;
+      break;
+    case SEL_FIRST:
+      newselect = 0;
+      break;
+    case SEL_LAST:
+      newselect = p->list->count-1;
+      break;
+    default:
+      return;  // invalid direction sent? Use the enum, Luke!!!
+  }
+  panel_select(p, newselect);
+}

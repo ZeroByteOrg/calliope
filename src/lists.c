@@ -13,8 +13,6 @@ void list_clear(itemlist* list) {
         list->name[i] = blank;
       }
   list->count=0;
-  list->selected=0xff;
-  list->active=0xff;
 }
 
 char list_add(itemlist* list, const char* name) {
@@ -52,8 +50,6 @@ void list_remove(itemlist* list, uint8_t index) {
   --list->count;
   if (list->name[list->count] != blank)
     free(list->name[list->count]);
-  if (list->selected == list->count) list->selected=0xff;
-  if (list->active == list->count) list->active=0xff;
 }
 
 char list_move (itemlist* list, uint8_t from, uint8_t to) {
@@ -62,37 +58,16 @@ char list_move (itemlist* list, uint8_t from, uint8_t to) {
 
   if (from == to) return 1;
   if (from >= list->count || to >= list->count ) return 0;
+  tmp = list->name[from];
   if (from>=to) {
-    tmp = list->name[from];
     for (i=from;i>to;--i)
       list->name[i] = list->name[i-1];
     list->name[to] = tmp;
-
-    if (list->selected == from)
-      list->selected = to;
-    else if (list->selected >= to && list->selected < from)
-      ++list->selected;
-
-    if (list->active == from)
-      list->active = to;
-    else if (list->active >= to && list->active < from)
-      ++list->active;
   }
   else {
-    tmp = list->name[from];
     for (i=from;i<to;++i)
       list->name[i] = list->name[i+1];
     list->name[to] = tmp;
-
-    if (list->selected == from)
-      list->selected = to;
-    else if (list->selected > from && list->selected <= to)
-      --list->selected;
-
-    if (list->active == from)
-      list->active = to;
-    else if (list->active > from && list->active <= to)
-      --list->active;
   }
   return 1;
 }
@@ -105,14 +80,6 @@ char list_swap (itemlist* list, uint8_t from, uint8_t to) {
   tmp = list->name[from];
   list->name[from] = list->name[to];
   list->name[to] = tmp;
-  if (list->selected==from)
-    list->selected=to;
-  else if (list->selected==to)
-    list->selected=from;
-  if (list->active==from)
-    list->active=to;
-  else if (list->active==to)
-    list->active=from;
   return 1;
 }
 
