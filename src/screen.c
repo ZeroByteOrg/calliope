@@ -4,13 +4,41 @@
 #include <stdio.h> // sprintf()
 
 
+panel* panels[MAX_PANELS];
+panel* activePanel;
+uint8_t numPanels;
+
 void print_list(panel* p);
 
 char blankline[] = "%80s"; // token for cprintf() to use
 
 void screen_init() {
+  char i=0;
   clrscr();
+  while(i<MAX_PANELS) panels[i++]=NULL;
+  numPanels = 0;
+  activePanel = NULL;
 }
+
+void screen_update() {
+  char i, a;
+  for (i=0;i<numPanels;i++) {
+    //if (panels[i]->dirty) panel_draw(panels[i]);
+    panel_draw(panels[i]);
+    if(panels[i]==activePanel) a=i;
+  }
+  gotoxy (0,0);
+  cprintf(
+    "p:%u  items:%2d  slected:%2d  row:%2d col:%2d",
+    a,
+    activePanel->list->count,
+    activePanel->selection,
+    activePanel->row,
+    activePanel->col
+  );
+
+}
+
 
 void panel_init(panel* p, itemlist* l, uint8_t x, uint8_t y, uint8_t w, uint8_t h) {
   p->x=x;
@@ -24,6 +52,15 @@ void panel_init(panel* p, itemlist* l, uint8_t x, uint8_t y, uint8_t w, uint8_t 
   p->row=0;
   p->col=0;
   p->scroll=0;
+  if (numPanels < MAX_PANELS) {
+    panels[numPanels]=p;
+    if(numPanels==0) {
+      panel_activate(p);
+    }
+    ++numPanels;
+  }
+  panel_select(p,SEL_FIRST);
+  p->dirty=1;
 }
 
 void panel_clear(panel* p) {
@@ -37,6 +74,7 @@ void panel_clear(panel* p) {
     cprintf(blankline," \n");
     gotox(x);
   }
+  p->dirty=0;
 }
 
 void panel_draw(panel* p) {
@@ -44,6 +82,7 @@ void panel_draw(panel* p) {
   uint8_t y=p->y;
   gotoxy(x,y);
   print_list(p);
+  p->dirty=0;
 }
 
 void print_list(panel* p) {
@@ -57,8 +96,8 @@ void print_list(panel* p) {
   for (i=0;i<p->h;i++) {
     n=p->scroll+i;
     for (j=0; j<p->numCols ; j++) {
+      cprintf(" ");
       if(n<p->list->count && i+p->scroll<step) {
-        cprintf(" ");
         if (n==p->selection && p->active) revers(1);
         cprintf("%-" STR(ITEMSIZE) "s",name[n]);
         revers(0);
@@ -88,26 +127,22 @@ void panel_select(panel* p, uint8_t item) {
     scroll = mod - p->h + 1;
 
   if (scroll != p->scroll) {
-    p->scroll = scroll;
-    print_list(p);
+    p->scroll=scroll;
+    p->dirty=1;
   }
   else {
     // TODO: make code that just updates the old/new selection display
-    print_list(p);
+    p->dirty=1;
   }
-  gotoxy (0,0);
-  cprintf ("scroll %02u   mod %02u  item %02u", p->scroll, mod, p->selection );
 }
 
 // placeholders - better functionality would be to just re-draw the selected item...
 void panel_activate(panel* p) {
+  activePanel->active=0;
+  activePanel->dirty=1;
   p->active=1;
-  panel_draw(p);
-}
-
-void panel_deactivate(panel* p) {
-  p->active=0;
-  panel_draw(p);
+  p->dirty=1;
+  activePanel=p;
 }
 
 void panel_selection_move(panel* p, char change) {
@@ -161,4 +196,14 @@ void panel_selection_move(panel* p, char change) {
       return;  // invalid direction sent? Use the enum, Luke!!!
   }
   panel_select(p, newselect);
+}
+
+void panel_set_list(panel* p, itemlist* l) {
+  p->list = l;
+  panel_select(p, 0);
+  p->dirty = 1;
+}
+
+void print_loading(char isloading) {
+  isloading++; // just to shut up the compiler while this is a stub
 }

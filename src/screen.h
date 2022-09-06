@@ -8,6 +8,8 @@
 #define STR_(X) #X
 #define STR(X) STR_(X)
 
+#define MAX_PANELS 4
+
 enum selectionmoves {
   SEL_UP,
   SEL_DOWN,
@@ -29,16 +31,21 @@ typedef struct {
   itemlist* list;
   uint8_t selection;
   uint8_t active;
+  uint8_t dirty;
 } panel;
 
+extern panel* activePanel;
+
 extern void screen_init();
+extern void screen_update();
 
 extern void panel_init(panel* p, itemlist* l, uint8_t x, uint8_t y, uint8_t w, uint8_t h);
+extern void panel_set_list(panel* p, itemlist* l);
 extern void panel_clear(panel* p);
 extern void panel_draw(panel* p);
 extern void panel_select(panel* p, uint8_t item);
 extern void panel_activate(panel* p);
-extern void panel_deactivate(panel* p);
 
+extern void print_loading(char isloading);
 
 #endif

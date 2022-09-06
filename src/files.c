@@ -13,6 +13,9 @@ char* ll_addr;
 
 char ll_working=0;
 
+char loaded_song[FILENAME_LEN] = "";
+char loaded_path[128] = "";
+
 extern int __fastcall__ macptr(char nbytes, void* addr);
 // defined in macptr.asm
 
@@ -30,6 +33,13 @@ void go_root() {
     chdir("..");
     --d;
   }
+}
+
+char already_loaded(const char* path, const char* file) {
+	if(strcmp(path,loaded_path)==0 && strcmp(file,loaded_song)==0)
+		return 1;
+	else
+		return 0;
 }
 
 signed char chdir(const char* dirname) {
@@ -97,7 +107,12 @@ signed char get_dir_list(itemlist* list) {
   else return 0;
 }
 
-char init_lazy_load(const char* path, const char* filename, char bank, void* addr) {
+char start_lazy_load(const char* path, const char* filename, char bank, void* addr) {
+	if (already_loaded(path,filename)) {
+		// the loaded song is the song being requested. Just leave
+		// the lazy loader alone and return true
+		return 1;
+	}
 	if (ll_working) {
 		cbm_close(LAZY_LFN);
 	}
@@ -107,9 +122,15 @@ char init_lazy_load(const char* path, const char* filename, char bank, void* add
   	if (cbm_open(LAZY_LFN,8,LAZY_LFN,filename)!=0) return 0;
   	ll_bank = bank;
   	ll_addr = (char*)addr;
+		strcpy(loaded_path,path);
+		strcpy(loaded_song,filename);
   	go_root();
     ll_working = 1;
   }
+	else {
+		loaded_path[0]=0;
+		loaded_song[0]=0;
+	}
 	chdir(workdir.path);
 	return ll_working;
 }
@@ -125,7 +146,11 @@ int lazy_load() {
 		ll_addr += n;
 		if (ll_addr >= (char*)0xc000) ll_addr -= 0x2000;
 		ll_bank =RAM_BANK;
-		RAM_BANK = ll_bank;
+		RAM_BANK = b;
+	}
+	if (n==0) {
+		ll_working=0;
+		cbm_close(LAZY_LFN);
 	}
 	return n;
 }
@@ -133,6 +158,11 @@ int lazy_load() {
 char load(const char* path, const char* filename, char bank, void* addr) {
   char b,b1;
   char* a;
+	if (already_loaded(path,filename)) return 1;
+	if (ll_working) {
+		cbm_close(LAZY_LFN);
+		ll_working=0;
+	}
   go_root();
   if(!chdir(path)) return 0;
   b = RAM_BANK;
@@ -144,5 +174,15 @@ char load(const char* path, const char* filename, char bank, void* addr) {
   RAM_BANK = b;
   go_root();
   chdir(workdir.path);
-  return (b1 != ll_bank || a != ll_addr);
+  if (b1 != ll_bank || a != ll_addr) {
+		// success
+		strcpy(loaded_song,filename);
+		strcpy(loaded_path,path);
+		return 1;
+	}
+	else {
+		loaded_path[0]=0;
+		loaded_song[0]=0;
+		return 0;
+	}
 }

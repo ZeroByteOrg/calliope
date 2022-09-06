@@ -5,7 +5,7 @@
 #include <cbm.h>
 #include "zsound/zsmplayer.h"
 
-extern void __fastcall__ init();
+extern char __fastcall__ init();
 
 const char* name[4]= { "main.zsm", "levela.zsm", "lose.zsm", "win.zsm" };
 
