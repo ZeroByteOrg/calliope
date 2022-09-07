@@ -27,7 +27,7 @@ void screen_update() {
     panel_draw(panels[i]);
     if(panels[i]==activePanel) a=i;
   }
-  gotoxy (0,0);
+  gotoxy (20,26);
   cprintf(
     "p:%u  items:%2d  slected:%2d  row:%2d col:%2d",
     a,
@@ -205,5 +205,12 @@ void panel_set_list(panel* p, itemlist* l) {
 }
 
 void print_loading(char isloading) {
-  isloading++; // just to shut up the compiler while this is a stub
+  gotoxy (35,2);
+  if (isloading) {
+    revers(1);
+    cprintf("loading");
+    revers(0);
+  }
+  else
+    cprintf("       ");
 }

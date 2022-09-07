@@ -4,7 +4,7 @@ from PIL import Image
 import argparse
 
 parser = argparse.ArgumentParser(description="Convert indexed image formats to raw tile data.")
-parser.add_argument("-s", "--size", choices=["8x8", "8x16", "16x8", "16x16", "32x32", "320x240", "640x480" ], default="8x8", help="Size of individual tiles. Defaults to 8x8.")
+parser.add_argument("-s", "--size", choices=["8x8", "8x16", "16x8", "16x16", "32x32", "320x240", "640x480", "640x240" ], default="8x8", help="Size of individual tiles. Defaults to 8x8.")
 parser.add_argument("-b", "--bpp", choices=["2","4","8"], default=4, help="bpp depth of input file. Defaults to 4bpp")
 parser.add_argument("-n", "--noheader", help="Do not put a 2-byte PRG header at the beginning of the output file", dest='skipheader', default=False, action='store_true')
 parser.add_argument("input", help="Input file.")

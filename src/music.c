@@ -1,5 +1,6 @@
 #include <stdint.h>
 
+#include "music.h"
 #include "zsmplayer.h"
 #include "screen.h"
 #include "files.h"
@@ -12,8 +13,6 @@
 char music_playing;
 char music_ended;
 itemlist playlist;
-
-extern void __fastcall__ ym_init();
 
 void player_init() {
   zsm_init();
@@ -35,16 +34,15 @@ void music_play() {
 char music_start(char* path, char* filename) {
   if (music_playing) {
     zsm_stopmusic();
-    ym_init();   // patch for a bug in Zsound on real HW when switching songs.
   }
   music_playing=0;
   music_ended = 0;
+  ym_init();   // patch for a bug in Zsound on real HW when switching songs.
   if (start_lazy_load(path,filename,1,(void*)0xa000)) {
     lazy_load();
-    print_loading(1);
     __asm__ ("sei");
     zsm_startmusic(1,0xa000);
-    ZSMDELAY = 4;
+    ZSMDELAY = 8;
     __asm__ ("cli");
     //playlist_add(workdir.path, files.name[files.active]);
     //playlist.redraw=1;

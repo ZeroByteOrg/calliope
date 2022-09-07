@@ -1,4 +1,5 @@
 #include "files.h"
+#include "screen.h"
 #include <cbm.h>
 #include <string.h>
 #include <stdio.h>
@@ -124,6 +125,7 @@ char start_lazy_load(const char* path, const char* filename, char bank, void* ad
   	ll_addr = (char*)addr;
 		strcpy(loaded_path,path);
 		strcpy(loaded_song,filename);
+		print_loading(1);
   	go_root();
     ll_working = 1;
   }
@@ -133,6 +135,16 @@ char start_lazy_load(const char* path, const char* filename, char bank, void* ad
 	}
 	chdir(workdir.path);
 	return ll_working;
+}
+
+void stop_lazy_load() {
+	if (ll_working) {
+		cbm_close(LAZY_LFN);
+		ll_working=0;
+		loaded_path[0]=0;
+		loaded_song[0]=0;
+		print_loading(0);
+	}
 }
 
 int lazy_load() {
@@ -148,9 +160,10 @@ int lazy_load() {
 		ll_bank =RAM_BANK;
 		RAM_BANK = b;
 	}
-	if (n==0) {
+	if (n<1) {
 		ll_working=0;
 		cbm_close(LAZY_LFN);
+		n=-1;
 	}
 	return n;
 }
@@ -185,4 +198,10 @@ char load(const char* path, const char* filename, char bank, void* addr) {
 		loaded_song[0]=0;
 		return 0;
 	}
+}
+
+unsigned int load_asset(const char* filename, char bank, void* addr) {
+	cbm_k_setnam(filename);
+	cbm_k_setlfs(0,8,0);
+	return cbm_k_load(bank+2,addr);
 }

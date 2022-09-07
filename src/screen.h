@@ -23,6 +23,10 @@ enum selectionmoves {
   SEL_LAST
 };
 
+enum textcolors {
+  TEXT_GREEN=6
+};
+
 typedef struct {
   uint8_t x, y, w, h;
   uint8_t numCols;
