@@ -293,11 +293,13 @@ void bg_fast_load(char stopbank, char* stopat) {
 
   RAM_BANK = 1;
   a = (char*)0xA000;
-  while (a != stopat && RAM_BANK != stopbank) {
+  while (a != stopat || RAM_BANK != stopbank) {
     VERA.data0 = *a;
     if (++a >= (char*)0xC000) {
       a=(char*)0xA000;
-      if(++RAM_BANK >= 12) break; // something's wrong if more than 10 banks!
+      ++RAM_BANK;
+      if(RAM_BANK >= 12) break; // something's wrong if more than 10 banks!
     }
   }
+  //cprintf ("\n\n\rdone at: %02d:%04x\n\r",RAM_BANK,(uint16_t)a);
 }

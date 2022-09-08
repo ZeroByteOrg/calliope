@@ -1,5 +1,6 @@
 root/*
 res/*.zip
+calliope-*.zip
 zsound/
 *.PRG
 *.o
@@ -10,3 +11,4 @@ imgui.ini
 sdcard.img
 calliope.img
 CALLIOPE
+foo
