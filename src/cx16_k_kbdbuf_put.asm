@@ -11,7 +11,7 @@
 .code
 
 .proc _cx16_k_kbdbuf_put: near
-  jsr $FF68
+  jsr $FEC3
   lda #0
   ldx #0
   rts
