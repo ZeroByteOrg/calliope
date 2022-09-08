@@ -17,12 +17,18 @@
 #define SCR_PLAY_ADDR_Y 3
 #define SCR_VIEWER_X 21
 #define SCR_VIEWER_Y 8
-#define SCR_VIEWER_W (3*ITEMSIZE + 3)
+#define SCR_VIEWER_W ((3*ITEMSIZE + 3) + 6)
 #define SCR_VIEWER_H 20
 #define SCR_NAV_X 1
 #define SCR_NAV_Y 6
 #define SCR_NAV_W (ITEMSIZE)
 #define SCR_NAV_H (SCR_VIEWER_H)
+#define SCR_PATH_X 21
+#define SCR_PATH_Y 6
+#define SCR_PATH_X1 76
+#define SCR_MSG_X 1
+#define SCR_MSG_Y 28
+#define SCR_MSG_X1 76
 
 enum selectionmoves {
   SEL_UP,
@@ -65,6 +71,9 @@ extern void panel_select(panel* p, uint8_t item);
 extern void panel_activate(panel* p);
 
 extern void print_loading(char isloading);
-extern void print_addresses();
+extern void __fastcall__ print_addresses();
+extern void print_path();
+extern void print_msg(char* msg);
+extern void clear_msg();
 
 #endif

@@ -20,11 +20,14 @@ panel nav;    // folder selection list
 
 itemlist dirs, files;
 
+char message[SCR_MSG_X1-SCR_MSG_X+1];
+
 // function prototypes
 char init();
 void panel_selection_move(panel* p, char change);
 void select_folder(const char* folder);
 void generate_reversed();
+void welcome();
 
 char lyr_settings[14]={
   0x06,0x00,0x01,0x00,0x01,0x00,0x00,
@@ -32,7 +35,7 @@ char lyr_settings[14]={
 };
 
 char txt_palette[6]={
-  0x00, 0x00, 0x0, 0x94, 0x11, 0xa4
+  0x00, 0x00, 0x94, 0x00, 0xa4, 0x11
 };
 
 void main() {
@@ -43,7 +46,13 @@ void main() {
     return;
   };
   screen_update();
+  welcome();
+  screen_update();
   while(1) {
+    if (ll_working)
+      if (lazy_load()<0)
+        print_loading(0);
+    print_addresses();
     if(kbhit()) {
       key=cgetc();
       if (key=='q') break;
@@ -106,6 +115,8 @@ void main() {
         case CH_SHIFT_ENTER:
           if (activePanel==&viewer) {
             music_start(workdir.path,viewer.list->name[viewer.selection]);
+            sprintf(message,"now playing: %s%s/%s", workdir.root,workdir.path,viewer.list->name[viewer.selection]);
+            print_msg(message);
           }
           else if (activePanel==&nav) {
             select_folder(nav.list->name[nav.selection]);
@@ -115,17 +126,11 @@ void main() {
       gotoxy(74,28);
       cprintf("%03u",key);
     }
-    if (ll_working)
-      if (lazy_load()<0)
-        print_loading(0);
-    print_addresses();
-    #define ZSMBANK (*(char*)0x0024)
-    #define ZSMADR  (*(unsigned int*)0x0022)
-    if ( (ll_bank>ZSMBANK)||((unsigned int)ll_addr == ZSMADR && ll_bank >= ZSMBANK) ) {
-      gotoxy(0,32);
-      cprintf("too lazy");
+    if (music_ended || !music_playing) {
+      clear_msg();
+      music_ended=0;
+      music_playing=0;
     }
-
   }
   music_stop();
   ym_init();
@@ -156,12 +161,11 @@ char init() {
   }
   get_zsm_list(&files);
   if (files.count==0 && dirs.count==0) return 0;
-/*
-  VERA.address = 0xfa00 + (16*2 * 6); // choose palette row 6
+  VERA.address = 0xfa00 + (16*2 * 6) + 2; // choose palette row 6, entry 1.
   VERA.address_hi = 1 | VERA_INC_1;
   for (i=0; i<6 ; i++)
     VERA.data0 = txt_palette[i];
-*/
+
   videomode(VIDEOMODE_80x30);
   textcolor(0);
   bgcolor(TEXT_GREEN); // yes, background color! (2bpp mode)
@@ -170,6 +174,9 @@ char init() {
   cprintf("loading assets...");
   load_asset("2bppaltfont.bin",1,(void*)0x3000);
   load_asset("bg.bin",0,0);
+  RAM_BANK=1;
+  bload("opening.bin",(void*)0xa000);
+
   cprintf("\n\rgenerating reversed font....");
   generate_reversed();
   for(i=0;i<14;i++) {
@@ -191,9 +198,44 @@ char init() {
   install_irq();
   VERA.irq_raster = 0;
   VERA.irq_enable |= 2;
+  music_start_opening(1,0xa000);
 
 
   return 1;
+}
+
+void welcome(){
+  char x;
+  panel_clear(&viewer);
+  gotoxy(viewer.x,viewer.y);
+  x=wherex();
+  cprintf("welcome to calliope! --powered by Zsound.\n\n");
+  gotox(x);
+  cprintf("controls:\n");
+  gotox(x);
+  cprintf("use the cursor keys and home/end/pg-up/pg-down\n");
+  gotox(x);
+  cprintf("to navigate the file and directory browser.\n\n");
+  gotox(x);
+  cprintf("use the tab key to switch between the file\n");
+  gotox(x);
+  cprintf("and directory browser panels.\n\n");
+  gotox(x);
+  cprintf("spacebar: stop music playback\n\n");
+  gotox(x);
+  cprintf("enter: start playing slected song\n");
+  gotox(x);
+  cprintf("       open selected directory\n\n");
+  gotox(x);
+  cprintf("q: quit\n");
+  print_msg("press any key to begin");
+  while(kbhit()) cgetc();
+  while(!kbhit()) {}
+  while(kbhit()) cgetc();
+  panel_clear(&viewer);
+  panel_select(&viewer, SEL_FIRST);
+  if (files.count >= 1) panel_activate(&viewer);
+  clear_msg();
 }
 
 void select_folder(const char* folder) {
@@ -216,13 +258,11 @@ void select_folder(const char* folder) {
   }
   get_dir_list(&dirs);
   get_zsm_list(&files);
-/*
-  GET BACK TO USING THIS CONTROL FLOW.....
-  draw_path();
-  screen_update();
-*/
+  print_path();
   panel_set_list(&nav,&dirs);
   panel_set_list(&viewer,&files);
+  if(files.count > 0 && dirs.count < 2)
+    panel_activate(&viewer);
 }
 
 void generate_reversed() {

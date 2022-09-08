@@ -5,7 +5,7 @@
 
 .import playmusic_IRQ
 
-.import print_addresses
+.import _print_addresses
 
 .code
 .proc irqhandler: near
@@ -23,7 +23,7 @@
   pla
   rti
 SHOW_RAM_INDICATORS:
-  ;jsr print_addresses
+  ;jsr _print_addresses
   jmp $ffff
 .endproc
 

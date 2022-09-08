@@ -78,7 +78,7 @@ void get_zsm_list(itemlist* list) {
       }
     }
     cbm_closedir(1);
-		list_sort(list);
+		//list_sort(list);
   }
 }
 
@@ -102,7 +102,7 @@ signed char get_dir_list(itemlist* list) {
     }
     cbm_closedir(1);
   }
-	list_sort(list);
+	//list_sort(list);
 	list_move(list, list_index(list, ".."), 0);
   if (list->count) return root;
   else return 0;

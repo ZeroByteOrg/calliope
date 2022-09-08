@@ -12,6 +12,7 @@ uint8_t numPanels;
 void print_list(panel* p);
 void print_panel_debug();
 
+char msg_cleared=1;
 char blankline[] = "%80s"; // token for cprintf() to use
 
 void screen_init() {
@@ -215,9 +216,35 @@ void print_loading(char isloading) {
   cprintf("load");
 }
 
-void print_addresses() {
+void __fastcall__ print_addresses() {
   gotoxy(SCR_LOAD_ADDR_X, SCR_LOAD_ADDR_Y);
   cprintf("%02x:%04x",ll_bank,(uint16_t)ll_addr);
   gotoxy(SCR_PLAY_ADDR_X, SCR_PLAY_ADDR_Y);
   cprintf("%02x:%04x",*(uint8_t*)0x0024,*(uint16_t*)0x0022);
+}
+
+void print_path() {
+  gotoxy(SCR_PATH_X,SCR_PATH_Y);
+  cprintf("%s%s",workdir.root,workdir.path);
+  do {
+    cprintf(" ");
+    if(wherex()==SCR_PATH_X1) break;
+  } while(1);
+}
+
+void print_msg(char* msg) {
+  gotoxy(SCR_MSG_X,SCR_MSG_Y);
+  cprintf("%s",msg);
+  do {
+    cprintf(" ");
+    if(wherex()==SCR_MSG_X1) break;
+  } while(1);
+  msg_cleared=0;
+}
+
+void clear_msg() {
+  if (!msg_cleared) {
+    msg_cleared=1;
+    print_msg("");
+  }
 }

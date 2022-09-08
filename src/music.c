@@ -14,12 +14,16 @@ char music_playing;
 char music_ended;
 itemlist playlist;
 
+void music_looped(uint8_t playing, uint8_t remaining);
+
+
 void player_init() {
   zsm_init();
   ym_init();
   list_clear(&playlist);
   music_playing=0;
   music_ended=0;
+  zsm_setcallback(&music_looped);
 }
 
 void music_play() {
@@ -49,6 +53,11 @@ char music_start(char* path, char* filename) {
     music_playing = 1;
   }
   return music_playing;
+}
+void music_start_opening() {
+  ym_init();
+  music_playing=1;
+  zsm_startmusic(1,0xa000);
 }
 
 void music_stop() {
