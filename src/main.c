@@ -28,6 +28,7 @@ void panel_selection_move(panel* p, char change);
 void select_folder(const char* folder);
 void generate_reversed();
 void welcome();
+void bg_fast_load(char stopbank, char* stopat);
 
 char lyr_settings[14]={
   0x06,0x00,0x01,0x00,0x01,0x00,0x00,
@@ -53,6 +54,7 @@ void main() {
       if (lazy_load()<0)
         print_loading(0);
     print_addresses();
+    joystick2kbd(1);
     if(kbhit()) {
       key=cgetc();
       if (key=='q') break;
@@ -123,8 +125,9 @@ void main() {
           }
       }
       screen_update();
-      gotoxy(74,28);
-      cprintf("%03u",key);
+//      gotoxy(70,25);
+//      cprintf("%03u",key);
+//      cprintf("%04x",joy1.current);
     }
     if (music_ended || !music_playing) {
       clear_msg();
@@ -145,6 +148,7 @@ void main() {
 
 char init() {
   uint8_t i;
+  char* addr;
 
   cbm_k_bsout(CH_FONT_UPPER);
   workdir.depth = 0;
@@ -173,12 +177,15 @@ char init() {
   gotoxy(0,0);
   cprintf("loading assets...");
   load_asset("2bppaltfont.bin",1,(void*)0x3000);
-  load_asset("bg.bin",0,0);
+  generate_reversed();
+//  load_asset("bg.bin",0,0);
   RAM_BANK=1;
-  bload("opening.bin",(void*)0xa000);
+  addr=bload("bg.bin",(void*)0xA000);
+  bg_fast_load(RAM_BANK,addr); // stop at RAM_BANK:addr
+  RAM_BANK=1;
+  bload("opening.bin",(void*)0xA000);
 
   cprintf("\n\rgenerating reversed font....");
-  generate_reversed();
   for(i=0;i<14;i++) {
      ((char*)0x9f2d)[i] = lyr_settings[i];
   }
@@ -199,7 +206,6 @@ char init() {
   VERA.irq_raster = 0;
   VERA.irq_enable |= 2;
   music_start_opening(1,0xa000);
-
 
   return 1;
 }
@@ -277,4 +283,21 @@ void generate_reversed() {
     VERA.data1 = VERA.data0 ^ 0xff;
   }
   VERA.control = 0;
+}
+
+void bg_fast_load(char stopbank, char* stopat) {
+  char* a;
+
+  VERA.address=0;
+  VERA.address_hi=(0|VERA_INC_1);
+
+  RAM_BANK = 1;
+  a = (char*)0xA000;
+  while (a != stopat && RAM_BANK != stopbank) {
+    VERA.data0 = *a;
+    if (++a >= (char*)0xC000) {
+      a=(char*)0xA000;
+      if(++RAM_BANK >= 12) break; // something's wrong if more than 10 banks!
+    }
+  }
 }
