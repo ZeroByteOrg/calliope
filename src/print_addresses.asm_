@@ -1,0 +1,57 @@
+.include "x16.inc"
+
+.export print_addresses
+
+.import _ll_bank
+.import _ll_addr
+.import data  ; from zsound
+
+LOAD_XY = ($1b000 + (7*2) + ($100 * 1)) ; 7*2 = col 7 , $100*1 = row 1
+PLAY_XY = ($1b000 + (7*2) + ($100 * 3)) ; col 7, row 3
+
+; MUST BE IRQ SAFE!!!!!
+.segment "CODE"
+
+.proc print_addresses: near
+  ; save state of CTRL first so we can switch to data0 safely
+  lda VERA_ctrl
+  pha
+  and #$FE ; clear the low bit (data port selection - make it zero)
+  sta VERA_ctrl
+  ; back up current state of data0
+  lda VERA_addr_low
+  pha
+  lda VERA_addr_high
+  pha
+  lda VERA_addr_bank
+  pha
+
+  VERA_SET_ADDR LOAD_XY, 2
+  ldx #8
+loop1:
+  dex
+  beq print_play_addr
+  lda _ll_bank
+  and #$0F
+  tay
+  lda hextable,y
+  sta VERA_data0
+  lda _ll_bank
+
+
+
+  ; restore state of data0
+  pla
+  sta VERA_addr_bank
+  pla
+  sta VERA_addr_high
+  pla
+  sta VERA_addr_low
+  pla
+  sta VERA_ctrl ; restores whichever data port was active previously
+.endproc
+
+.rodata
+
+ptr_lo:
+  .word _ll_bank, <_ll_bank

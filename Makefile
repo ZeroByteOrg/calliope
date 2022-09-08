@@ -2,7 +2,9 @@ DIR_ZSOUND ?= ../zsound
 DIR_BIN ?= ./root
 PROGNAME ?= CALLIOPE.PRG
 
-MDRIVE ?= y:
+MDRIVE ?= g:
+MDIR ?= CALLIOPE
+MPATH = $(MDRIVE)/$(MDIR)
 
 VGM = $(notdir $(wildcard res/vgm/*.VGM))
 ZSM = $(VGM:%.VGM=%.ZSM)
@@ -36,7 +38,7 @@ media: $(MEDIA)
 
 sdcard: $(TARGET)
 #	mcopy -s -o $(DIR_BIN)/* $(MDRIVE)
-	mcopy -o $(TARGET) $(MDRIVE)/AUTOBOOT.X16
+	mcopy -o $(TARGET) $(MPATH)/$(PROGNAME)
 
 clean:
 	rm -f $(TARGET) $(SYM)

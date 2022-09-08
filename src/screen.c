@@ -1,4 +1,5 @@
 #include "screen.h"
+#include "files.h" // for the lazy loader pointer variables ll_addr/ll_bank
 #include <cbm.h>
 #include <conio.h>
 #include <stdio.h> // sprintf()
@@ -9,6 +10,7 @@ panel* activePanel;
 uint8_t numPanels;
 
 void print_list(panel* p);
+void print_panel_debug();
 
 char blankline[] = "%80s"; // token for cprintf() to use
 
@@ -18,6 +20,9 @@ void screen_init() {
   while(i<MAX_PANELS) panels[i++]=NULL;
   numPanels = 0;
   activePanel = NULL;
+  print_loading(0);
+  gotoxy(SCR_PLAY_ADDR_X-5,SCR_PLAY_ADDR_Y);
+  cprintf("play ");
 }
 
 void screen_update() {
@@ -27,18 +32,18 @@ void screen_update() {
     panel_draw(panels[i]);
     if(panels[i]==activePanel) a=i;
   }
+}
+
+void print_panel_debug() {
   gotoxy (20,26);
   cprintf(
-    "p:%u  items:%2d  slected:%2d  row:%2d col:%2d",
-    a,
+    "items:%2d  slected:%2d  row:%2d col:%2d",
     activePanel->list->count,
     activePanel->selection,
     activePanel->row,
     activePanel->col
   );
-
 }
-
 
 void panel_init(panel* p, itemlist* l, uint8_t x, uint8_t y, uint8_t w, uint8_t h) {
   p->x=x;
@@ -205,12 +210,14 @@ void panel_set_list(panel* p, itemlist* l) {
 }
 
 void print_loading(char isloading) {
-  gotoxy (35,2);
-  if (isloading) {
-    revers(1);
-    cprintf("loading");
-    revers(0);
-  }
-  else
-    cprintf("       ");
+  gotoxy (SCR_LOAD_ADDR_X-5,SCR_LOAD_ADDR_Y);
+  revers(isloading==1);
+  cprintf("load");
+}
+
+void print_addresses() {
+  gotoxy(SCR_LOAD_ADDR_X, SCR_LOAD_ADDR_Y);
+  cprintf("%02x:%04x",ll_bank,(uint16_t)ll_addr);
+  gotoxy(SCR_PLAY_ADDR_X, SCR_PLAY_ADDR_Y);
+  cprintf("%02x:%04x",*(uint8_t*)0x0024,*(uint16_t*)0x0022);
 }

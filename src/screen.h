@@ -10,6 +10,20 @@
 
 #define MAX_PANELS 4
 
+//Screen Layout defines
+#define SCR_LOAD_ADDR_X 7
+#define SCR_LOAD_ADDR_Y 1
+#define SCR_PLAY_ADDR_X 7
+#define SCR_PLAY_ADDR_Y 3
+#define SCR_VIEWER_X 21
+#define SCR_VIEWER_Y 8
+#define SCR_VIEWER_W (3*ITEMSIZE + 3)
+#define SCR_VIEWER_H 20
+#define SCR_NAV_X 1
+#define SCR_NAV_Y 6
+#define SCR_NAV_W (ITEMSIZE)
+#define SCR_NAV_H (SCR_VIEWER_H)
+
 enum selectionmoves {
   SEL_UP,
   SEL_DOWN,
@@ -51,5 +65,6 @@ extern void panel_select(panel* p, uint8_t item);
 extern void panel_activate(panel* p);
 
 extern void print_loading(char isloading);
+extern void print_addresses();
 
 #endif

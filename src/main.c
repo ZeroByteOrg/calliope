@@ -9,7 +9,7 @@
 #include "music.h"
 
 // move these to a layout definition .h file of some sort....
-#define VRAM_FONT 0x2000
+#define VRAM_FONT 0x3000
 
 // these are exported by irq.asm
 extern void install_irq();
@@ -31,6 +31,10 @@ char lyr_settings[14]={
   0x61,0xd8,0x98,0x00,0x00,0x00,0x00
 };
 
+char txt_palette[6]={
+  0x00, 0x00, 0x0, 0x94, 0x11, 0xa4
+};
+
 void main() {
   char key;
   cbm_k_chrout(CH_FONT_UPPER);
@@ -49,6 +53,7 @@ void main() {
       #define CH_END            4
       #define CH_SHIFT_END    132
       #define CH_SHIFT_HOME   147
+      #define CH_SHIFT_ENTER  141
       switch(key) {
         case ' ':
         case CH_STOP: // ESC in emu - not sure what the real code is...
@@ -92,22 +97,28 @@ void main() {
           break;
         case CH_ENTER:
           if (activePanel==&viewer) {
+            music_stop();
+            print_loading(1);
+            load(workdir.path,viewer.list->name[viewer.selection],1,(void*)0xa000);
+            print_loading(0);
+          }
+          // no break - fall through into regular ENTER
+        case CH_SHIFT_ENTER:
+          if (activePanel==&viewer) {
             music_start(workdir.path,viewer.list->name[viewer.selection]);
           }
           else if (activePanel==&nav) {
             select_folder(nav.list->name[nav.selection]);
           }
-
       }
       screen_update();
-      gotoxy(77,0);
+      gotoxy(74,28);
       cprintf("%03u",key);
     }
     if (ll_working)
       if (lazy_load()<0)
         print_loading(0);
-    gotoxy(1,28);
-    cprintf("$%02x:%04x $%02x:%04x",ll_bank,(unsigned int)ll_addr,*(char*)0x0024,*(unsigned int*)0x0022);
+    print_addresses();
     #define ZSMBANK (*(char*)0x0024)
     #define ZSMADR  (*(unsigned int*)0x0022)
     if ( (ll_bank>ZSMBANK)||((unsigned int)ll_addr == ZSMADR && ll_bank >= ZSMBANK) ) {
@@ -145,13 +156,19 @@ char init() {
   }
   get_zsm_list(&files);
   if (files.count==0 && dirs.count==0) return 0;
+/*
+  VERA.address = 0xfa00 + (16*2 * 6); // choose palette row 6
+  VERA.address_hi = 1 | VERA_INC_1;
+  for (i=0; i<6 ; i++)
+    VERA.data0 = txt_palette[i];
+*/
   videomode(VIDEOMODE_80x30);
   textcolor(0);
   bgcolor(TEXT_GREEN); // yes, background color! (2bpp mode)
   clrscr();
   gotoxy(0,0);
   cprintf("loading assets...");
-  load_asset("2bppaltfont.bin",1,0x3000);
+  load_asset("2bppaltfont.bin",1,(void*)0x3000);
   load_asset("bg.bin",0,0);
   cprintf("\n\rgenerating reversed font....");
   generate_reversed();
@@ -160,10 +177,11 @@ char init() {
   }
   VERA.display.video = 0x31;
   screen_init();
-  panel_init(&viewer, &files, 19, 8, 3*ITEMSIZE + 3, 20);
-  panel_init(&nav, &dirs, 1,6,ITEMSIZE,20);
-  panel_activate(&viewer);
+  panel_init(&viewer, &files, SCR_VIEWER_X,SCR_VIEWER_Y,SCR_VIEWER_W,SCR_VIEWER_H);
+  panel_init(&nav, &dirs, SCR_NAV_X,SCR_NAV_Y,SCR_NAV_W,SCR_NAV_H);
   viewer.numCols=3;
+  if (files.count) panel_activate(&viewer);
+  else panel_activate(&nav);
 
   player_init();
 

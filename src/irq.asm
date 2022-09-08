@@ -5,11 +5,13 @@
 
 .import playmusic_IRQ
 
+.import print_addresses
+
 .code
 .proc irqhandler: near
   lda #$02 ; check for VERA Line IRQ
   bit VERA_isr
-  beq DONE
+  beq SHOW_RAM_INDICATORS
   ; this is a VERA line IRQ. ACK and process before RTI
   sta VERA_isr
   lda #5 ; green
@@ -20,7 +22,8 @@
   plx
   pla
   rti
-DONE:
+SHOW_RAM_INDICATORS:
+  ;jsr print_addresses
   jmp $ffff
 .endproc
 
