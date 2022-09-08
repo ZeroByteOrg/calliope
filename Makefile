@@ -3,7 +3,7 @@ DIR_BIN ?= ./root
 PROGNAME ?= CALLIOPE.PRG
 
 MDRIVE ?= g:
-MDIR ?= CALLIOPE
+MDIR ?= .
 MPATH = $(MDRIVE)/$(MDIR)
 
 VGM = $(notdir $(wildcard res/vgm/*.VGM))
@@ -39,9 +39,9 @@ media: $(MEDIA)
 sdcard: $(TARGET)
 #	mcopy -s -o $(DIR_BIN)/* $(MDRIVE)
 	mcopy -o $(TARGET) $(MPATH)/$(PROGNAME)
-	mcopy -o $(DIR_BIN)/BG.BIN $(MPATH)/
-	mcopy -o $(DIR_BIN)/2BPPALTFONT.BIN $(MPATH)/
-	mcopy -o $(DIR_BIN)/OPENING.BIN $(MPATH)/
+	mcopy -o res/BG.BIN $(MPATH)/
+	mcopy -o res/2BPPALTFONT.BIN $(MPATH)/
+	mcopy -o res/OPENING.BIN $(MPATH)/
 
 clean:
 	rm -f $(TARGET) $(SYM)
