@@ -215,7 +215,7 @@ void welcome(){
   panel_clear(&viewer);
   gotoxy(viewer.x,viewer.y);
   x=wherex();
-  cprintf("welcome to calliope! --powered by Zsound.\n\n");
+  cprintf("welcome to calliope! --powered by zsound.\n\n");
   gotox(x);
   cprintf("controls:\n");
   gotox(x);
