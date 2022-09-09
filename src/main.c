@@ -171,6 +171,8 @@ char init() {
     VERA.data0 = txt_palette[i];
 
   videomode(VIDEOMODE_80x30);
+  VERA.control = 0; //~0x02; // ensure we are using DCSEL=0
+  VERA.display.border = TEXT_GREEN-1; // make the "CPU utilization" bar green.
   textcolor(0);
   bgcolor(TEXT_GREEN); // yes, background color! (2bpp mode)
   clrscr();

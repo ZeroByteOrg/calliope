@@ -9,20 +9,32 @@
 
 .code
 .proc irqhandler: near
+  lda VERA_ctrl  ; both branches need the ctrl value backed up, so load it first
+  tay
   lda #$02 ; check for VERA Line IRQ
   bit VERA_isr
-  beq SHOW_RAM_INDICATORS
+  beq VBLANK
+RASTERLINE:
   ; this is a VERA line IRQ. ACK and process before RTI
   sta VERA_isr
-  lda #5 ; green
-  sta VERA_dc_border
+  phy ; save the VERA_ctrl value for after Zsound finishes playing...
   jsr playmusic_IRQ
-  stz VERA_dc_border
+  lda #2
+  sta VERA_ctrl
+  lda #(640>>2) ; restore screen width to 640 so the "not-lit" part of CPU is BG bitmap.
+  sta VERA_dc_hstop
   ply
+  sty VERA_ctrl ; restore VERA_ctrl to previous state
+  ply           ; restore CPU registers and return from IRQ
   plx
   pla
   rti
-SHOW_RAM_INDICATORS:
+VBLANK:
+  lda #2
+  sta VERA_ctrl
+  lda #(632>>2)  ; set H_STOP to x=632 to show CPU raster bar
+  sta VERA_dc_hstop
+  sty VERA_ctrl
   ;jsr _print_addresses
   jmp $ffff
 .endproc
