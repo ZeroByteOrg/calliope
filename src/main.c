@@ -236,7 +236,7 @@ void welcome(){
   cprintf("q: quit\n");
   print_msg("press any key to begin");
   while(kbhit()) cgetc();
-  while(!kbhit()) {}
+  while(!kbhit()) {joystick2kbd(1);}
   while(kbhit()) cgetc();
   panel_clear(&viewer);
   panel_select(&viewer, SEL_FIRST);
