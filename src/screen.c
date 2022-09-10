@@ -8,10 +8,13 @@
 panel* panels[MAX_PANELS];
 panel* activePanel;
 uint8_t numPanels;
+uint8_t leds_active;
 
 void print_list(panel* p);
 void print_panel_debug();
 void leds_init();
+void leds_update();
+void clear_sprites();
 
 char msg_cleared=1;
 char blankline[] = "%80s"; // token for cprintf() to use
@@ -28,13 +31,30 @@ void screen_init() {
   leds_init();
 }
 
-void screen_update() {
+
+void screen_update(uint8_t music_playing) {
   char i, a;
+  leds_update(music_playing);
   for (i=0;i<numPanels;i++) {
     //if (panels[i]->dirty) panel_draw(panels[i]);
     panel_draw(panels[i]);
     if(panels[i]==activePanel) a=i;
   }
+}
+
+void screen_close() {
+  clear_sprites();
+  VERA.layer1.config=0x60;
+  VERA.layer1.mapbase=0xd8;
+  VERA.layer1.tilebase=0xf8;
+  VERA.layer0.config=0;
+  VERA.layer0.mapbase=0;
+  VERA.layer0.tilebase=0;
+  bgcolor(COLOR_BLUE);
+  textcolor(COLOR_WHITE);
+  videomode(VIDEOMODE_80x60);
+  clrscr();
+  cprintf("may all of your days be musical!\n\n\r");
 }
 
 void print_panel_debug() {
@@ -216,6 +236,7 @@ void print_loading(char isloading) {
   gotoxy (SCR_LOAD_ADDR_X-5,SCR_LOAD_ADDR_Y);
   revers(isloading==1);
   cprintf("load");
+  revers(0);
 }
 
 void __fastcall__ print_addresses() {
@@ -251,12 +272,21 @@ void clear_msg() {
   }
 }
 
+void clear_sprites() {
+  uint16_t i;
+
+  VERA.control=0;
+  VERA.address=0xFC00;
+  VERA.address_hi=1|VERA_INC_1;
+  for (i=0 ; i<(0x1FFFF-0x1FC00) ; i++) VERA.data0=0; // clear the sprite regs
+  VERA.display.video &= ~(1<<6); // disable sprites
+}
+
 void leds_init() {
   uint16_t i;
   uint16_t  x,y;
 
-  VERA.control=0;
-  VERA.display.video &= ~(1<<6); // disable sprites
+  clear_sprites();
   VERA.address=0xFC00;
   VERA.address_hi=1|VERA_INC_1;
   for (i=0 ; i<(0x1FFFF-0x1FC00) ; i++) VERA.data0=0; // clear the sprite regs
@@ -284,4 +314,23 @@ void leds_init() {
     x+=8;
   }
   VERA.display.video |= (1<<6); // enable sprites
+  leds_active = 0;
+}
+
+
+void leds_update(uint8_t playing) {
+  uint8_t i;
+  if (leds_active) {
+    if (!playing) {
+      leds_active=0; // make sure the IRQ won't update them during the clear
+      VERA.control=0;
+      VERA.address=0xFC00;
+      VERA.address_hi=1|VERA_INC_8;
+      for(i=0;i<24;i++) VERA.data0 = SCR_LED_VRAMBASE & 0XFF;
+    }
+  }
+  else {
+    if (playing)
+      leds_active=1;
+  }
 }

@@ -45,15 +45,15 @@ void main() {
     printf("no music files or folders found.\n");
     return;
   };
-  screen_update();
+  screen_update(0);
   welcome();
-  screen_update();
+  screen_update(music_playing);
   while(1) {
     if (ll_working)
       if (lazy_load()<0)
         print_loading(0);
     print_addresses();
-    joystick2kbd(1);
+    joystick2kbd(1);  // hack to get the joystick working in time for VCF
     if(kbhit()) {
       key=cgetc();
       if (key=='q') break;
@@ -123,7 +123,7 @@ void main() {
             select_folder(nav.list->name[nav.selection]);
           }
       }
-      screen_update();
+      screen_update(music_playing);  // I think this should just hit on the next loop???
 //      gotoxy(70,25);
 //      cprintf("%03u",key);
 //      cprintf("%04x",joy1.current);
@@ -135,14 +135,13 @@ void main() {
     }
   }
   music_stop();
-  ym_init();
-  VERA.irq_enable ^= 2; // disable line IRQs
-  VERA.control |= 2;
-  VERA.display.hstop = 640>>2;
-  VERA.control ^= 2;
-  remove_irq();
   stop_lazy_load();
+  ym_init();
+  psg_init();
+  VERA.irq_enable &= ~2; // disable line IRQs
+  remove_irq();
   go_root();
+  screen_close();
 }
 
 char init() {

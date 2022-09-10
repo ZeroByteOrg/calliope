@@ -1,5 +1,6 @@
 
 .export _ym_init
+.export _psg_init
 
 YMreg = $9f40
 YMval = $9f41
@@ -36,7 +37,7 @@ FULL_CLEAR:
   RTS
 .endproc
 
-YMWRITE:
+.proc YMWRITE: near
   ; YM Status busy flag check (bit7 set = YM is busy.)
   BIT YMval
   BMI YMWRITE
@@ -50,3 +51,20 @@ YMWRITE:
   NOP
   STA YMval
   RTS
+.endproc
+
+.proc _psg_init: near
+  STZ VERA_ctrl
+  LDA #$C0
+  STA VERA_addr_low
+  LDA #$F9
+  STA VERA_addr_high
+  LDA #$11
+  STA VERA_addr_bank
+  LDX #$40
+next:
+  STZ VERA_data0
+  DEX
+  BPL next
+  RTS
+.endproc

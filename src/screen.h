@@ -67,7 +67,8 @@ typedef struct {
 extern panel* activePanel;
 
 extern void screen_init();
-extern void screen_update();
+extern void screen_update(uint8_t music_playing);
+extern void screen_close();
 
 extern void panel_init(panel* p, itemlist* l, uint8_t x, uint8_t y, uint8_t w, uint8_t h);
 extern void panel_set_list(panel* p, itemlist* l);

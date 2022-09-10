@@ -16,5 +16,6 @@ extern char music_start(char* path, char* filename);
 extern void music_stop();
 
 extern void __fastcall__ ym_init();
+extern void __fastcall__ psg_init();
 
 #endif

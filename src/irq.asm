@@ -75,5 +75,13 @@ EXIT:
   stx IRQVec+1
   cli
 EXIT:
+  ; make sure VERA DISPLAY_HSTOP is cleared back to full 640px width.
+  lda VERA_ctrl
+  tay
+  and #2
+  sta VERA_ctrl
+  lda #(640>>2)
+  sta VERA_dc_hstop
+  sty VERA_ctrl
   rts
 .endproc
