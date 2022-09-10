@@ -140,6 +140,9 @@ void main() {
   psg_init();
   VERA.irq_enable &= ~2; // disable line IRQs
   remove_irq();
+  VERA.control |= 2;
+  VERA.display.hstop = 640>>2;
+  VERA.control ^= 2;
   go_root();
   screen_close();
 }

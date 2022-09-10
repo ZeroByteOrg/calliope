@@ -2,7 +2,6 @@
 
 #include "music.h"
 #include "zsmplayer.h"
-#include "screen.h"
 #include "files.h"
 
 // This is a kludge. If Zsound doesn't end up using this address for delay
@@ -10,9 +9,12 @@
 // to expose it in the API
 #define ZSMDELAY (*(char*)0x0025)
 
-char music_playing;
-char music_ended;
 itemlist playlist;
+
+uint8_t music_playing = 0;
+uint8_t music_ended   = 0;
+uint8_t loops_done    = 0;
+uint8_t loops_left    = 0;
 
 void music_looped(uint8_t playing, uint8_t remaining);
 
@@ -20,17 +22,17 @@ void music_looped(uint8_t playing, uint8_t remaining);
 void player_init() {
   zsm_init();
   ym_init();
-  list_clear(&playlist);
-  music_playing=0;
-  music_ended=0;
+  psg_init();
+  list_clear(&playlist);  // Move this out of player?
   zsm_setcallback(&music_looped);
 }
 
-void music_play() {
+void player_update() {
   if (!music_playing) return;
-  zsm_play();
+  //zsm_play();
   if(music_ended) {
-    music_playing = 0;
+    music_playing=0;
+    music_ended=0;
     // un-highlight the song name, for instance?
   }
 }
@@ -40,7 +42,7 @@ char music_start(char* path, char* filename) {
     zsm_stopmusic();
   }
   music_playing=0;
-  music_ended = 0;
+  music_ended=0;
   ym_init();   // patch for a bug in Zsound on real HW when switching songs.
   if (start_lazy_load(path,filename,1,(void*)0xa000)) {
     lazy_load();
@@ -54,9 +56,14 @@ char music_start(char* path, char* filename) {
   }
   return music_playing;
 }
+
+// quick hack to get the OPENING.BIN song to play w/o needing to pass a
+// filename and path. Maybe convert this to a general-purpose
+// "play-whats-loaded" API call?
 void music_start_opening() {
   ym_init();
   music_playing=1;
+  music_ended=0;
   zsm_startmusic(1,0xa000);
 }
 
@@ -64,13 +71,20 @@ void music_stop() {
   zsm_stopmusic();
   music_playing=0;
   music_ended=0;
+  loops_left=0;
 }
 
+// This is the loop/end notification callback handler.
 void music_looped(uint8_t playing, uint8_t remaining) {
+  ++loops_done;
   if (!playing) {
     music_ended = 1;
   }
+  loops_left=remaining;
 }
 
 uint8_t music_get_ym_chanmask() {
+  // stub. this is how things _should_ get the
+  // channels-in-use mask.
+  return 0;
 }

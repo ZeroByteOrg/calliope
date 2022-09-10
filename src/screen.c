@@ -4,6 +4,8 @@
 #include <conio.h>
 #include <stdio.h> // sprintf()
 
+#include "music.h"
+
 
 panel* panels[MAX_PANELS];
 panel* activePanel;
@@ -40,6 +42,8 @@ void screen_update(uint8_t music_playing) {
     panel_draw(panels[i]);
     if(panels[i]==activePanel) a=i;
   }
+  gotoxy(74,26);
+  cprintf("%u %u",music_playing, music_ended);
 }
 
 void screen_close() {
@@ -52,6 +56,9 @@ void screen_close() {
   VERA.layer0.tilebase=0;
   bgcolor(COLOR_BLUE);
   textcolor(COLOR_WHITE);
+  VERA.control |= 2;
+  VERA.display.hstop = 640>>2;
+  VERA.control ^= 2;
   videomode(VIDEOMODE_80x60);
   clrscr();
   cprintf("may all of your days be musical!\n\n\r");
