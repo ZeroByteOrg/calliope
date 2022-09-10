@@ -4,13 +4,14 @@
 #include <conio.h>
 #include <stdio.h> // sprintf()
 
-#include "music.h"
+//#include "music.h"
 
 
 panel* panels[MAX_PANELS];
 panel* activePanel;
 uint8_t numPanels;
-uint8_t leds_active;
+
+uint8_t leds_active=0;
 
 void print_list(panel* p);
 void print_panel_debug();
@@ -38,12 +39,14 @@ void screen_update(uint8_t music_playing) {
   char i, a;
   leds_update(music_playing);
   for (i=0;i<numPanels;i++) {
-    //if (panels[i]->dirty) panel_draw(panels[i]);
-    panel_draw(panels[i]);
+    if (panels[i]->dirty) panel_draw(panels[i]);
+    //panel_draw(panels[i]);
     if(panels[i]==activePanel) a=i;
   }
+#ifdef __NOYMLED
   gotoxy(74,26);
   cprintf("%u %u",music_playing, music_ended);
+#endif
 }
 
 void screen_close() {
@@ -253,7 +256,10 @@ void __fastcall__ print_addresses() {
   cprintf("%02x:%04x",*(uint8_t*)0x0024,*(uint16_t*)0x0022);
 }
 
-void print_path() {
+void print_path() {  VERA.control |= 2;
+  VERA.display.hstop = 640>>2;
+  VERA.control ^= 2;
+
   gotoxy(SCR_PATH_X,SCR_PATH_Y);
   cprintf("%s%s",workdir.root,workdir.path);
   do {
@@ -321,30 +327,48 @@ void leds_init() {
     x+=8;
   }
   VERA.display.video |= (1<<6); // enable sprites
-  leds_active = 0;
 }
 
+void leds_enable(uint8_t leds_on) {
+  uint8_t i;
 
-void leds_update(uint8_t playing) {
-  #define ZSM_MASK (*(char*)0xA009)
-  uint8_t i,c;
-  if (leds_active) {
-    if (!playing) {
-      leds_active=0; // make sure the IRQ won't update them during the clear
-      VERA.control=0;
-      VERA.address=0xFC00;
-      VERA.address_hi=1|VERA_INC_8;
-      for(i=0;i<24;i++) VERA.data0 = SCR_LED_VRAMBASE & 0XFF;
-    }
-  }
-  else {
-    if (playing)
+  if (leds_on) {
+
+#ifndef __NOYMLED
+    if (!leds_active) {
+      // hack to access the YM channel use mask.
+      #define ZSM_MASK (*(char*)0xA009)
       RAM_BANK=1;
       VERA.control=0;
       VERA.address=0xFC00;
       VERA.address_hi=1|VERA_INC_8;
       for(i=0;i<8;i++)
         VERA.data0 = ((ZSM_MASK >> i) & 0x01) ? 0x0f : 0;
-      leds_active=1;
+    }
+#endif
+
   }
+  else {
+    if (leds_active) {
+      VERA.control=0;
+      VERA.address=0xFC00;
+      VERA.address_hi=1|VERA_INC_8;
+      for(i=0;i<24;i++) VERA.data0 = SCR_LED_VRAMBASE & 0XFF;
+    }
+  }
+  leds_active = leds_on;
+}
+
+void leds_update(uint8_t playing) {
+  static uint8_t laststate=0xff;
+
+  if (playing != laststate) {
+    laststate = playing;
+    leds_enable(playing);
+  }
+}
+
+void leds_forceupdate(uint8_t leds_on) {
+  leds_enable(!leds_on);
+  leds_enable(leds_on);
 }

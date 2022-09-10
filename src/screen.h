@@ -77,6 +77,9 @@ extern void panel_draw(panel* p);
 extern void panel_select(panel* p, uint8_t item);
 extern void panel_activate(panel* p);
 
+extern void leds_enable(uint8_t leds_on);
+extern void leds_forceupdate(uint8_t leds_on);
+
 extern void print_loading(char isloading);
 extern void __fastcall__ print_addresses();
 extern void print_path();

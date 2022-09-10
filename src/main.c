@@ -53,6 +53,7 @@ void main() {
       if (lazy_load()<0)
         print_loading(0);
     print_addresses();
+    screen_update(music_playing);
     joystick2kbd(1);  // hack to get the joystick working in time for VCF
     if(kbhit()) {
       key=cgetc();
@@ -109,6 +110,7 @@ void main() {
           if (activePanel==&viewer) {
             music_stop();
             print_loading(1);
+            leds_forceupdate(0);
             load(workdir.path,viewer.list->name[viewer.selection],1,(void*)0xa000);
             print_loading(0);
           }
@@ -118,12 +120,14 @@ void main() {
             music_start(workdir.path,viewer.list->name[viewer.selection]);
             sprintf(message,"now playing: %s%s/%s", workdir.root,workdir.path,viewer.list->name[viewer.selection]);
             print_msg(message);
+            leds_forceupdate(music_playing);
           }
           else if (activePanel==&nav) {
             select_folder(nav.list->name[nav.selection]);
           }
       }
-      screen_update(music_playing);  // I think this should just hit on the next loop???
+//      screen_update(music_playing);  // I think this should just hit on the next loop???
+
 //      gotoxy(70,25);
 //      cprintf("%03u",key);
 //      cprintf("%04x",joy1.current);

@@ -43,15 +43,16 @@ char music_start(char* path, char* filename) {
   }
   music_playing=0;
   music_ended=0;
+  loops_done=0;
+  loops_left=0;
   ym_init();   // patch for a bug in Zsound on real HW when switching songs.
   if (start_lazy_load(path,filename,1,(void*)0xa000)) {
-    lazy_load();
+    lazy_load(); // get the first ~512 bytes into memory for zsm_startmusic
+                 // to have access to the ZSM header...
     __asm__ ("sei");
     zsm_startmusic(1,0xa000);
-    ZSMDELAY = 8;
+    ZSMDELAY = 8;       // give the lazy loader a head start
     __asm__ ("cli");
-    //playlist_add(workdir.path, files.name[files.active]);
-    //playlist.redraw=1;
     music_playing = 1;
   }
   return music_playing;
@@ -64,6 +65,8 @@ void music_start_opening() {
   ym_init();
   music_playing=1;
   music_ended=0;
+  loops_done=0;
+  loops_left=0; // 0=infinite... TODO: user-defined max-loops control.
   zsm_startmusic(1,0xa000);
 }
 
