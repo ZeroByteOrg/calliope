@@ -42,6 +42,8 @@ sdcard: $(TARGET)
 	mcopy -o res/BG.BIN $(MPATH)/
 	mcopy -o res/2BPPALTFONT.BIN $(MPATH)/
 	mcopy -o res/OPENING.BIN $(MPATH)/
+	mcopy -o res/PAL.BIN $(MPATH)/
+	mcopy -o res/LED.BIN $(MPATH)/
 
 clean:
 	rm -f $(TARGET) $(SYM)

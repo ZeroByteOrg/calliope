@@ -202,6 +202,6 @@ char load(const char* path, const char* filename, char bank, void* addr) {
 
 unsigned int load_asset(const char* filename, char bank, void* addr) {
 	cbm_k_setnam(filename);
-	cbm_k_setlfs(0,8,0);
-	return (unsigned int)cbm_k_load(bank+2,addr);
+	cbm_k_setlfs(0,8,2);
+	return (unsigned int)cbm_k_load(bank+2,(unsigned int)addr);
 }

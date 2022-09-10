@@ -9,7 +9,10 @@
 #include "music.h"
 
 // move these to a layout definition .h file of some sort....
-#define VRAM_FONT 0x3000
+#define VRAM_FONT    0x3000
+#define VRAM_LEDS    (SCR_LED_VRAMBASE & 0xFFFF)
+#define VRAM_PALETTE 0xFA80
+
 
 // these are exported by irq.asm
 extern void install_irq();
@@ -33,10 +36,6 @@ void bg_fast_load(char stopbank, char* stopat);
 char lyr_settings[14]={
   0x06,0x00,0x01,0x00,0x01,0x00,0x00,
   0x61,0xd8,0x98,0x00,0x00,0x00,0x00
-};
-
-char txt_palette[6]={
-  0x00, 0x00, 0x94, 0x00, 0xa4, 0x11
 };
 
 void main() {
@@ -165,10 +164,6 @@ char init() {
   }
   get_zsm_list(&files);
   if (files.count==0 && dirs.count==0) return 0;
-  VERA.address = 0xfa00 + (16*2 * 6) + 2; // choose palette row 6, entry 1.
-  VERA.address_hi = 1 | VERA_INC_1;
-  for (i=0; i<6 ; i++)
-    VERA.data0 = txt_palette[i];
 
   videomode(VIDEOMODE_80x30);
   VERA.control = 0; //~0x02; // ensure we are using DCSEL=0
@@ -178,15 +173,17 @@ char init() {
   clrscr();
   gotoxy(0,0);
   cprintf("loading assets...");
-  load_asset("2bppaltfont.bin",1,(void*)0x3000);
+  load_asset("pal.bin",1,(void*)VRAM_PALETTE);
+  load_asset("2bppaltfont.bin",1,(void*)VRAM_FONT);
+  load_asset("led.bin",1,(void*)VRAM_LEDS);
   generate_reversed();
-//  load_asset("bg.bin",0,0);
+  // setup RAM_BANK prior to calling bg_fast_load()
   RAM_BANK=1;
   addr=bload("bg.bin",(void*)0xA000);
   bg_fast_load(RAM_BANK,addr); // stop at RAM_BANK:addr
   RAM_BANK=1;
-  bload("opening.bin",(void*)0xA000);
 
+  bload("opening.bin",(void*)0xA000);
   cprintf("\n\rgenerating reversed font....");
   for(i=0;i<14;i++) {
      ((char*)0x9f2d)[i] = lyr_settings[i];

@@ -29,6 +29,12 @@
 #define SCR_MSG_X 1
 #define SCR_MSG_Y 28
 #define SCR_MSG_X1 76
+#define SCR_LEDYM_X 528
+#define SCR_LEDYM_Y 8
+#define SCR_LEDPSG_X 528
+#define SCR_LEDPSG_Y 24
+#define SCR_LED_VRAMBASE 0x14000
+#define SCR_LED_PALETTE 4
 
 enum selectionmoves {
   SEL_UP,

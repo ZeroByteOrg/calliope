@@ -11,6 +11,7 @@ uint8_t numPanels;
 
 void print_list(panel* p);
 void print_panel_debug();
+void leds_init();
 
 char msg_cleared=1;
 char blankline[] = "%80s"; // token for cprintf() to use
@@ -24,6 +25,7 @@ void screen_init() {
   print_loading(0);
   gotoxy(SCR_PLAY_ADDR_X-5,SCR_PLAY_ADDR_Y);
   cprintf("play ");
+  leds_init();
 }
 
 void screen_update() {
@@ -247,4 +249,39 @@ void clear_msg() {
     msg_cleared=1;
     print_msg("");
   }
+}
+
+void leds_init() {
+  uint16_t i;
+  uint16_t  x,y;
+
+  VERA.control=0;
+  VERA.display.video &= ~(1<<6); // disable sprites
+  VERA.address=0xFC00;
+  VERA.address_hi=1|VERA_INC_1;
+  for (i=0 ; i<(0x1FFFF-0x1FC00) ; i++) VERA.data0=0; // clear the sprite regs
+  VERA.address=0xFC00; // return data0 to sprite 1 register.
+
+  x=SCR_LEDYM_X;
+  y=SCR_LEDYM_Y;
+  for(i=0; i<24 ; i++) {
+    if (i==8) {
+      x=SCR_LEDPSG_X;
+      y=SCR_LEDPSG_Y;
+    }
+    if (i==16) {
+      x=SCR_LEDPSG_X;
+      y=(SCR_LEDPSG_Y+8);
+    }
+    VERA.data0=((SCR_LED_VRAMBASE>>5) & 0xFF);
+    VERA.data0=((SCR_LED_VRAMBASE>>13) & 0xFF);
+    VERA.data0=x & 0xFF;
+    VERA.data0=(x>>8) & 0x03;
+    VERA.data0=y & 0xFF;
+    VERA.data0=(y>>8) & 0x03;
+    VERA.data0=0x0C;
+    VERA.data0=SCR_LED_PALETTE;
+    x+=8;
+  }
+  VERA.display.video |= (1<<6); // enable sprites
 }
