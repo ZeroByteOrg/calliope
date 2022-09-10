@@ -9,6 +9,7 @@ extern char music_ended;
 
 extern void player_init();
 extern void music_play();
+extern uint8_t music_get_ym_chanmask();
 
 extern void music_start_opening();
 

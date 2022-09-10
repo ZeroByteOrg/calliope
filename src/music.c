@@ -71,3 +71,6 @@ void music_looped(uint8_t playing, uint8_t remaining) {
     music_ended = 1;
   }
 }
+
+uint8_t music_get_ym_chanmask() {
+}

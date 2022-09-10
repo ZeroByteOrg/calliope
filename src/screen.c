@@ -319,7 +319,8 @@ void leds_init() {
 
 
 void leds_update(uint8_t playing) {
-  uint8_t i;
+  #define ZSM_MASK (*(char*)0xA009)
+  uint8_t i,c;
   if (leds_active) {
     if (!playing) {
       leds_active=0; // make sure the IRQ won't update them during the clear
@@ -331,6 +332,12 @@ void leds_update(uint8_t playing) {
   }
   else {
     if (playing)
+      RAM_BANK=1;
+      VERA.control=0;
+      VERA.address=0xFC00;
+      VERA.address_hi=1|VERA_INC_8;
+      for(i=0;i<8;i++)
+        VERA.data0 = ((ZSM_MASK >> i) & 0x01) ? 0x0f : 0;
       leds_active=1;
   }
 }
