@@ -1,3 +1,4 @@
+.include "x16.inc"
 
 .export _ym_init
 .export _psg_init

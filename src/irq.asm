@@ -4,8 +4,11 @@
 .export _remove_irq
 
 .import playmusic_IRQ
+.import ledflash
 
 .import _print_addresses
+.import _leds_active
+
 
 .code
 .proc irqhandler: near
@@ -35,6 +38,10 @@ VBLANK:
   lda #(632>>2)  ; set H_STOP to x=632 to show CPU raster bar
   sta VERA_dc_hstop
   sty VERA_ctrl
+  lda _leds_active
+  beq NOLEDS
+  jsr ledflash
+NOLEDS:
   ;jsr _print_addresses
   jmp $ffff
 .endproc
