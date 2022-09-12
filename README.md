@@ -42,3 +42,36 @@ The Releases page for Calliope will have zips that include the SD image with the
 You can create ZSM files from VGMs that use chips understood by the vgm2zsm tool (requires PHP) included with Zsound: https://github.com/ZeroByteOrg/Zsound
 
 You can create music for the X16 VERA PSG chip natively in the Furnace tracker, and export the tune to ZSM format using my fork of the project on the ZSMv1 branch: https://github.com/ZeroByteOrg/Furnace/tree/ZSMv1
+
+---
+
+#### Acknowledgements:
+Tremendous thanks to Discord users Jestin#8850 for creating the UI bitmap, and to nicco1690#2556 for creating the nice 4-color font.
+
+Thanks to Furnace community members for contributing music to the archive:
+<br/>
+* **PacorexTheTrex#0049:**
+  * AHXSTYLE.ZSM
+  * GREENMOTOR.ZSM "Green Motorcycle Guy"
+  * INTROSTAGE.ZSM "The Intro Stage"
+
+
+* **aleksi knutsi#6446:**
+  * IMAGINATION.ZSM "Keys to Imagination"
+
+
+* **Luna, The Dark Goddess#6136:**
+  * LUNADEMO.ZSM
+
+
+* **MegaSparky#2725:**
+  * SPIRALHILLS.ZSM "Hills With Spiral Patterns"
+
+
+* **Supper_E1#8014:**
+  * X16BITPOP.ZSM
+
+
+* **Natt Akuma**
+  * Amiga AHX tracker ZSM export function:
+    * CHOPPER.ZSM - "Get To The Chopper" (by Hoffman) on Amiga AHX
