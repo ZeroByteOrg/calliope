@@ -18,9 +18,9 @@ all: $(addsuffix .SK,$(SKINS))
 	@rm -f $(GFXBIN) $(PALETTE)
 
 clean:
-	rm -f *.SK
-	rm -f $(GFXBIN)
-	rm -f $(PALETTE)
+	@rm -f *.SK
+	@rm -f $(GFXBIN)
+	@rm -f $(PALETTE)
 
 %.SK:
 	$(eval DIR   := $(patsubst %.SK,%/,$@))

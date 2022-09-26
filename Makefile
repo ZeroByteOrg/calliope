@@ -1,6 +1,11 @@
 DIR_ZSOUND ?= ../zsound
 DIR_BIN ?= ./root
+DIR_SKINS ?= ./skins
 PROGNAME ?= CALLIOPE.PRG
+
+# Change this to be the name of the skin to use as the default skin.
+#SKINNAME ?= BASIC.SK
+SKINNAME ?= STEAMPUNK.SK
 
 MDRIVE ?= g:
 MDIR ?= .
@@ -28,34 +33,59 @@ FLAGS ?= -t cx16 -g -Ln $(SYM)
 SRCS = $(wildcard src/*.c) $(wildcard src/*.asm)
 INCS = $(wildcard src/*.h) $(wildcard src/*.inc)
 
+SKIN = $(DIR_BIN)/DEFAULT.SK
+DITTY = $(DIR_BIN)/OPENING.BIN
+
 .PHONY: skins
 
+.phony: calliope
+
+# Main target to build the program and its skin data.
+calliope: $(TARGET) $(SKIN) $(DITTY)
+
+# Build CALLIOPE.PRG
 $(TARGET): $(SRCS) $(INCS) $(LIBZSOUND) $(ZSOUND_INCS)
 	@mkdir -p $(DIR_BIN)
 	cl65 $(FLAGS) $(FLAGS_ZSOUND) -O -o $@ $(SRCS) $(LIBZSOUND)
 
+# Build DEFAULT.SK from the skin named in $SKINNAME
+$(SKIN): $(DIR_SKINS)/$(SKINNAME)
+	@mkdir -p $(DIR_BIN)
+	cp $< $@
+
+$(DIR_SKINS)/$(SKINNAME):
+	@cd $(DIR_SKINS) && $(MAKE) $(SKINNAME)
+
+$(DITTY): $(DIR_SKINS)/$(SKINNAME:%.SK=%)/intro.zsm
+	@mkdir -p $(DIR_BIN)
+	cp $< $@
+
+.PHONY $(DIR_SKINS)/$(SKINNAME:%.SK=%)/intro.zsm:
+
+
 all: $(TARGET) $(MEDIA) skins
 
-skins:
+skins: $(SKIN)
 	@cd skins && $(MAKE)
+	cp $(DIR_SKINS)/$(SKINNAME) $(SKIN)
 
 media: $(MEDIA)
 
-sdcard: $(TARGET) skins
-#	mcopy -s -o $(DIR_BIN)/* $(MDRIVE)
+sdcard: calliope
 	mcopy -o $(TARGET) $(MPATH)/$(PROGNAME)
-#	mcopy -o res/BG.BIN $(MPATH)/
-#	mcopy -o res/2BPPALTFONT.BIN $(MPATH)/
-	mcopy -o res/OPENING.BIN $(MPATH)/
-#	mcopy -o res/PAL.BIN $(MPATH)/
-#	mcopy -o res/LED.BIN $(MPATH)/
-	mcopy -o skins/*.SK $(MPATH)/
+	mcopy -o $(DITTY) $(MPATH)/
+	mcopy -o $(SKIN) $(MPATH)/
 
 autoboot: sdcard
 	mcopy -o $(TARGET) $(MPATH)/AUTOBOOT.X16
 
+sdskins: skins
+	mcopy -o $(DIR_SKINS)/*.SK $(MPATH)/
+
 clean:
-	rm -f $(TARGET) $(SYM)
+	@rm -f $(DIR_BIN)/*
+	@rm -f $(SYM)
+	@rm -f src/*.o src/*.s
 	@cd skins && $(MAKE) clean
 
 mediaclean:

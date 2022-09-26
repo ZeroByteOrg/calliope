@@ -139,9 +139,6 @@ void main() {
   go_root();
   cbm_k_clrch();
   screen_close();
-//  gotoxy(30,20);
-//  cprintf ("bye bye");
-//  while(1) {}
 }
 
 char init() {
@@ -173,7 +170,7 @@ char init() {
   clrscr();
   gotoxy(0,0);
   cprintf("loading assets...");
-  load_skin("steampunk.sk");
+  load_skin("default.sk");
   RAM_BANK=1;
   bload("opening.bin",(void*)0xA000);
   // configure VERA display settings
