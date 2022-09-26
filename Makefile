@@ -32,7 +32,11 @@ $(TARGET): $(SRCS) $(INCS) $(LIBZSOUND) $(ZSOUND_INCS)
 	@mkdir -p $(DIR_BIN)
 	cl65 $(FLAGS) $(FLAGS_ZSOUND) -O -o $@ $(SRCS) $(LIBZSOUND)
 
-all: $(TARGET) $(MEDIA)
+all: $(TARGET) $(MEDIA) skins
+
+.PHONY: skins
+skins:
+	@cd skins && $(MAKE)
 
 media: $(MEDIA)
 
@@ -44,9 +48,11 @@ sdcard: $(TARGET)
 	mcopy -o res/OPENING.BIN $(MPATH)/
 	mcopy -o res/PAL.BIN $(MPATH)/
 	mcopy -o res/LED.BIN $(MPATH)/
+	mcopy -o skins/*.SK $(MPATH)/
 
 clean:
 	rm -f $(TARGET) $(SYM)
+	@cd skins && $(MAKE) clean
 
 mediaclean:
 	rm -rf $(DIR_BIN)*

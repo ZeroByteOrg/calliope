@@ -29,5 +29,6 @@ extern char start_lazy_load(const char* path, const char* filename, char bank, v
 extern void stop_lazy_load();
 extern char load(const char* path, const char* filename, char bank, void* addr);
 extern unsigned int load_asset(const char* filename, char bank, void* addr);
+extern void clear_loaded_song();
 
 #endif

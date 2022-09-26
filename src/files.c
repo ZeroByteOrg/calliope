@@ -130,8 +130,7 @@ char start_lazy_load(const char* path, const char* filename, char bank, void* ad
     ll_working = 1;
   }
 	else {
-		loaded_path[0]=0;
-		loaded_song[0]=0;
+		clear_loaded_song();
 	}
 	chdir(workdir.path);
 	return ll_working;
@@ -141,8 +140,7 @@ void stop_lazy_load() {
 	if (ll_working) {
 		cbm_close(LAZY_LFN);
 		ll_working=0;
-		loaded_path[0]=0;
-		loaded_song[0]=0;
+		clear_loaded_song();
 		print_loading(0);
 	}
 }
@@ -194,10 +192,14 @@ char load(const char* path, const char* filename, char bank, void* addr) {
 		return 1;
 	}
 	else {
-		loaded_path[0]=0;
-		loaded_song[0]=0;
+		clear_loaded_song();
 		return 0;
 	}
+}
+
+void clear_loaded_song() {
+	loaded_path[0]=0;
+	loaded_song[0]=0;
 }
 
 unsigned int load_asset(const char* filename, char bank, void* addr) {

@@ -7,12 +7,7 @@
 #include "screen.h"
 #include "input.h"
 #include "music.h"
-
-// move these to a layout definition .h file of some sort....
-#define VRAM_FONT    0x3000
-#define VRAM_LEDS    (SCR_LED_VRAMBASE & 0xFFFF)
-#define VRAM_PALETTE 0xFA80
-
+#include "skin.h"
 
 // these are exported by irq.asm
 extern void install_irq();
@@ -31,7 +26,6 @@ void panel_selection_move(panel* p, char change);
 void select_folder(const char* folder);
 void generate_reversed();
 void welcome();
-void bg_fast_load(char stopbank, char* stopat);
 
 char lyr_settings[14]={
   0x06,0x00,0x01,0x00,0x01,0x00,0x00,
@@ -153,7 +147,7 @@ void main() {
 
 char init() {
   uint8_t i;
-  char* addr;
+//  char* addr;
 
   cbm_k_bsout(CH_FONT_UPPER);
   workdir.depth = 0;
@@ -170,27 +164,20 @@ char init() {
   }
   get_zsm_list(&files);
   if (files.count==0 && dirs.count==0) return 0;
+  player_init();
 
   videomode(VIDEOMODE_80x30);
   VERA.control = 0; //~0x02; // ensure we are using DCSEL=0
   VERA.display.border = TEXT_GREEN-1; // make the "CPU utilization" bar green.
   textcolor(0);
-  bgcolor(TEXT_GREEN); // yes, background color! (2bpp mode)
+  bgcolor(SK_TEXT_NORMAL); // yes, background color! (2bpp mode)
   clrscr();
   gotoxy(0,0);
   cprintf("loading assets...");
-  load_asset("pal.bin",1,(void*)VRAM_PALETTE);
-  load_asset("2bppaltfont.bin",1,(void*)VRAM_FONT);
-  load_asset("led.bin",1,(void*)VRAM_LEDS);
-  generate_reversed();
-  // setup RAM_BANK prior to calling bg_fast_load()
+  load_skin("steampunk.sk");
   RAM_BANK=1;
-  addr=bload("bg.bin",(void*)0xA000);
-  bg_fast_load(RAM_BANK,addr); // stop at RAM_BANK:addr
-  RAM_BANK=1;
-
   bload("opening.bin",(void*)0xA000);
-  cprintf("\n\rgenerating reversed font....");
+  // configure VERA display settings
   for(i=0;i<14;i++) {
      ((char*)0x9f2d)[i] = lyr_settings[i];
   }
@@ -202,7 +189,6 @@ char init() {
   if (files.count) panel_activate(&viewer);
   else panel_activate(&nav);
 
-  player_init();
 
   VERA.control |= 2;
   VERA.display.hstop = 632>>2;
@@ -274,37 +260,4 @@ void select_folder(const char* folder) {
   panel_set_list(&viewer,&files);
   if(files.count > 0 && dirs.count < 2)
     panel_activate(&viewer);
-}
-
-void generate_reversed() {
-  int i;
-  VERA.control = 0;
-  VERA.address = VRAM_FONT;
-  VERA.address_hi = 1 | VERA_INC_1;
-  VERA.control = 1;
-  VERA.address = VRAM_FONT+0x800;
-  VERA.address_hi = 1 | VERA_INC_1;
-  for (i=0;i<0x800;i++) {
-    VERA.data1 = VERA.data0 ^ 0xff;
-  }
-  VERA.control = 0;
-}
-
-void bg_fast_load(char stopbank, char* stopat) {
-  char* a;
-
-  VERA.address=0;
-  VERA.address_hi=(0|VERA_INC_1);
-
-  RAM_BANK = 1;
-  a = (char*)0xA000;
-  while (a != stopat || RAM_BANK != stopbank) {
-    VERA.data0 = *a;
-    if (++a >= (char*)0xC000) {
-      a=(char*)0xA000;
-      ++RAM_BANK;
-      if(RAM_BANK >= 12) break; // something's wrong if more than 10 banks!
-    }
-  }
-  //cprintf ("\n\n\rdone at: %02d:%04x\n\r",RAM_BANK,(uint16_t)a);
 }

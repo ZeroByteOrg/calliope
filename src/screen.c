@@ -316,8 +316,10 @@ void leds_init() {
       x=SCR_LEDPSG_X;
       y=(SCR_LEDPSG_Y+8);
     }
-    VERA.data0=((SCR_LED_VRAMBASE>>5) & 0xFF);
-    VERA.data0=((SCR_LED_VRAMBASE>>13) & 0xFF);
+//    VERA.data0=((SCR_LED_VRAMBASE>>5) & 0xFF);
+//    VERA.data0=((SCR_LED_VRAMBASE>>13) & 0xFF);
+    VERA.data0=((VRAM_LEDS>>5) & 0xFF);
+    VERA.data0=((VRAM_LEDS>>13) & 0xFF);
     VERA.data0=x & 0xFF;
     VERA.data0=(x>>8) & 0x03;
     VERA.data0=y & 0xFF;
@@ -353,7 +355,8 @@ void leds_enable(uint8_t leds_on) {
       VERA.control=0;
       VERA.address=0xFC00;
       VERA.address_hi=1|VERA_INC_8;
-      for(i=0;i<24;i++) VERA.data0 = SCR_LED_VRAMBASE & 0XFF;
+//      for(i=0;i<24;i++) VERA.data0 = SCR_LED_VRAMBASE & 0XFF;
+      for(i=0;i<24;i++) VERA.data0 = VRAM_LEDS & 0XFF;
     }
   }
   leds_active = leds_on;

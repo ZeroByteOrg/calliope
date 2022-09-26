@@ -2,6 +2,7 @@
 #define _screen_h_
 
 #include "lists.h"
+#include "skin.h"
 #include <stdint.h>
 
 #define ITEMSIZE 16
@@ -11,6 +12,7 @@
 #define MAX_PANELS 4
 
 //Screen Layout defines
+#define SCR_PALBASE 16
 #define SCR_LOAD_ADDR_X 7
 #define SCR_LOAD_ADDR_Y 1
 #define SCR_PLAY_ADDR_X 7
@@ -33,8 +35,8 @@
 #define SCR_LEDYM_Y 8
 #define SCR_LEDPSG_X 528
 #define SCR_LEDPSG_Y 24
-#define SCR_LED_VRAMBASE 0x14000
-#define SCR_LED_PALETTE 4
+//#define SCR_LED_VRAMBASE 0x14000
+#define SCR_LED_PALETTE 2
 
 enum selectionmoves {
   SEL_UP,
