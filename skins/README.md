@@ -27,5 +27,13 @@ ranging from off state (0) to maximum brightness (15). The palette should
 contain 32 colors. The first 16 are the "on" color, and the remaining 16 are
 the "off/inactive" color.
 
+**intro.zsm**
+
+The Main project's Makefile will copy this file into the build directory as
+OPENING.BIN and play it when the program first launches. The file is named
+this in order to hide it from the UI during operation.
+
+Future updates will most likely see OPENING.BIN shift to being embedded within
+the SK file itself.
 
 

@@ -51,12 +51,12 @@ Tremendous thanks to Discord users Jestin#8850 for creating the UI bitmap, and t
 Thanks to Furnace community members for contributing music to the archive:
 <br/>
 * **PacorexTheTrex#0049:**
-  * AHXSTYLE.ZSM
   * GREENMOTOR.ZSM "Green Motorcycle Guy"
   * INTROSTAGE.ZSM "The Intro Stage"
 
 
 * **aleksi knutsi#6446:**
+  * AHXSTYLE.ZSM
   * IMAGINATION.ZSM "Keys to Imagination"
 
 
