@@ -46,7 +46,7 @@ void main() {
     if (ll_working)
       if (lazy_load()<0)
         print_loading(0);
-    print_addresses();
+    print_addresses(); // TODO: move into IRQ, else into screen_update().
     screen_update(music_playing);
     joystick2kbd(1);  // hack to get the joystick working in time for VCF
     if(kbhit()) {
@@ -100,7 +100,7 @@ void main() {
           else
             panel_activate(&viewer);
           break;
-        case CH_ENTER:
+        case CH_SHIFT_ENTER:
           if (activePanel==&viewer) {
             music_stop();
             print_loading(1);
@@ -109,7 +109,7 @@ void main() {
             print_loading(0);
           }
           // no break - fall through into regular ENTER
-        case CH_SHIFT_ENTER:
+        case CH_ENTER:
           if (activePanel==&viewer) {
             music_start(workdir.path,viewer.list->name[viewer.selection]);
             sprintf(message,"now playing: %s%s/%s", workdir.root,workdir.path,viewer.list->name[viewer.selection]);
@@ -120,11 +120,6 @@ void main() {
             select_folder(nav.list->name[nav.selection]);
           }
       }
-//      screen_update(music_playing);  // I think this should just hit on the next loop???
-
-//      gotoxy(70,25);
-//      cprintf("%03u",key);
-//      cprintf("%04x",joy1.current);
     }
     if (music_ended || !music_playing) {
       clear_msg();
@@ -142,7 +137,11 @@ void main() {
   VERA.display.hstop = 640>>2;
   VERA.control ^= 2;
   go_root();
+  cbm_k_clrch();
   screen_close();
+//  gotoxy(30,20);
+//  cprintf ("bye bye");
+//  while(1) {}
 }
 
 char init() {

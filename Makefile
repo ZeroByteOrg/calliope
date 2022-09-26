@@ -28,27 +28,31 @@ FLAGS ?= -t cx16 -g -Ln $(SYM)
 SRCS = $(wildcard src/*.c) $(wildcard src/*.asm)
 INCS = $(wildcard src/*.h) $(wildcard src/*.inc)
 
+.PHONY: skins
+
 $(TARGET): $(SRCS) $(INCS) $(LIBZSOUND) $(ZSOUND_INCS)
 	@mkdir -p $(DIR_BIN)
 	cl65 $(FLAGS) $(FLAGS_ZSOUND) -O -o $@ $(SRCS) $(LIBZSOUND)
 
 all: $(TARGET) $(MEDIA) skins
 
-.PHONY: skins
 skins:
 	@cd skins && $(MAKE)
 
 media: $(MEDIA)
 
-sdcard: $(TARGET)
+sdcard: $(TARGET) skins
 #	mcopy -s -o $(DIR_BIN)/* $(MDRIVE)
 	mcopy -o $(TARGET) $(MPATH)/$(PROGNAME)
-	mcopy -o res/BG.BIN $(MPATH)/
-	mcopy -o res/2BPPALTFONT.BIN $(MPATH)/
+#	mcopy -o res/BG.BIN $(MPATH)/
+#	mcopy -o res/2BPPALTFONT.BIN $(MPATH)/
 	mcopy -o res/OPENING.BIN $(MPATH)/
-	mcopy -o res/PAL.BIN $(MPATH)/
-	mcopy -o res/LED.BIN $(MPATH)/
+#	mcopy -o res/PAL.BIN $(MPATH)/
+#	mcopy -o res/LED.BIN $(MPATH)/
 	mcopy -o skins/*.SK $(MPATH)/
+
+autoboot: sdcard
+	mcopy -o $(TARGET) $(MPATH)/AUTOBOOT.X16
 
 clean:
 	rm -f $(TARGET) $(SYM)
