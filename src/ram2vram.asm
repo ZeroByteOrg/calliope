@@ -14,13 +14,18 @@
 ;   unsigned long bytes
 ; )
 
+; copies bytes from (HI)RAM into VRAM, starting
+; at dbank:data into VRAM at vbank:vaddr
+;
+; clobbers .AXY, RAM_BANK
+
 ; make some significant names for the tmp ZP variables (for readability)
 data  = ptr1
 bytes = tmp1 ; 32bit value... also uses tmp2
 
 .proc _vram_copy: near
-
-  ; rightmost arg is bytes - save to ZP for counter
+  ; first, pop the parameters from the stack and use them.
+  ; rightmost arg is bytes (u32) - on .AX and sreg
   sta bytes
   stx bytes+1
   lda sreg
@@ -53,6 +58,7 @@ nextpage:
   inc A
   sta data+1
 checkdone:
+  ; if bytes-1 == 0xFFFFFFFF we are done
   dex
   cpx #$ff
   bne copyit
@@ -65,7 +71,7 @@ checkdone:
   dec
   sta bytes+2
   cmp #$ff
-  beq copyit
+  bne copyit
   lda bytes+3
   dec
   sta bytes+3
@@ -76,12 +82,14 @@ copyit:
   sta VERA::DATA0
   iny
   bne checkdone
+  ; pointer crossed a page boundary. inc hi byte
+  ; and check for bank wrap
   lda data+1
-  cmp #$bf
-  bne nextpage
+  cmp #$bf      ; wrap if next value would be 0xC0
+  bne nextpage  ; if not - just continue and inc it....
   lda #$a0
   sta data+1
-  inc BANK::RAM
+  inc RAM_BANK
   bra checkdone
 done:
   lda #0

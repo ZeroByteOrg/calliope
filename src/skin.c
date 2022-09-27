@@ -2,12 +2,12 @@
 #include "files.h"
 #include "music.h" // for stopmusic()
 #include <cx16.h>
-#include <stdio.h>
 
 void generate_reversed_font();
-//void vram_copy(const char dbank, char* data, const char vbank, const char* vaddr, signed long bytes);
-void __fastcall__ vram_copy(const char dbank, char* data, const char vbank, const char* vaddr, signed long bytes);
 void clear_vram();
+
+// from ram2vram.asm
+void __fastcall__ vram_copy(const char dbank, char* data, const char vbank, const char* vaddr, signed long bytes);
 
 void load_skin(const char* skinfile) {
   music_stop(); // we're going to use HiRam to load assets into...
@@ -50,24 +50,3 @@ void clear_vram() {
 
   for (i=0 ; i<0x1AFFF ; i++) VERA.data0=0;
 }
-
-/*
-void vram_copy(const char dbank, char* data, const char vbank, const char* vaddr, signed long bytes) {
-
-  printf("\n\rvram copy %02x:%04x -> %1x%04x (%05Lx bytes)",
-    dbank, (unsigned int)data, vbank, (unsigned int)vaddr, bytes
-  );
-
-  VERA.address=(unsigned int)vaddr;
-  VERA.address_hi=((vbank & 0x01) | VERA_INC_1);
-
-  RAM_BANK = dbank;
-  while (--bytes >= 0) {
-    VERA.data0 = *data;
-    if (++data >= (char*)0xC000) {
-      data=(char*)0xA000;
-      ++RAM_BANK;
-    }
-  }
-}
-*/
