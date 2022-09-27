@@ -5,7 +5,8 @@
 #include <stdio.h>
 
 void generate_reversed_font();
-void vram_copy(const char dbank, char* data, const char vbank, const char* vaddr, signed long bytes);
+//void vram_copy(const char dbank, char* data, const char vbank, const char* vaddr, signed long bytes);
+void __fastcall__ vram_copy(const char dbank, char* data, const char vbank, const char* vaddr, signed long bytes);
 void clear_vram();
 
 void load_skin(const char* skinfile) {
@@ -50,6 +51,7 @@ void clear_vram() {
   for (i=0 ; i<0x1AFFF ; i++) VERA.data0=0;
 }
 
+/*
 void vram_copy(const char dbank, char* data, const char vbank, const char* vaddr, signed long bytes) {
 
   printf("\n\rvram copy %02x:%04x -> %1x%04x (%05Lx bytes)",
@@ -68,3 +70,4 @@ void vram_copy(const char dbank, char* data, const char vbank, const char* vaddr
     }
   }
 }
+*/

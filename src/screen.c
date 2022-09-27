@@ -43,10 +43,6 @@ void screen_update(uint8_t music_playing) {
     //panel_draw(panels[i]);
     if(panels[i]==activePanel) a=i;
   }
-#ifdef __NOYMLED
-  gotoxy(74,26);
-  cprintf("%u %u",music_playing, music_ended);
-#endif
 }
 
 void screen_close() {
@@ -335,8 +331,6 @@ void leds_enable(uint8_t leds_on) {
   uint8_t i;
 
   if (leds_on) {
-
-#ifndef __NOYMLED
     if (!leds_active) {
       // hack to access the YM channel use mask.
       #define ZSM_MASK (*(char*)0xA009)
@@ -347,15 +341,12 @@ void leds_enable(uint8_t leds_on) {
       for(i=0;i<8;i++)
         VERA.data0 = ((ZSM_MASK >> i) & 0x01) ? 0x0f : 0;
     }
-#endif
-
   }
   else {
     if (leds_active) {
       VERA.control=0;
       VERA.address=0xFC00;
       VERA.address_hi=1|VERA_INC_8;
-//      for(i=0;i<24;i++) VERA.data0 = SCR_LED_VRAMBASE & 0XFF;
       for(i=0;i<24;i++) VERA.data0 = VRAM_LEDS & 0XFF;
     }
   }
