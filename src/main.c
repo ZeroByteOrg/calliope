@@ -191,7 +191,7 @@ char init() {
   VERA.control ^= 2;
   install_irq();
   VERA.irq_raster = 0;
-  VERA.irq_enable |= 2;
+  VERA.irq_enable = VERA.irq_enable | 2 & 0x7F;
   music_start_opening(1,0xa000);
 
   return 1;

@@ -64,7 +64,6 @@ help:
 	@echo "  in addition to the usual make clean behavior, the local copy of zsound"
 	@echo "  is removed."
 
-.PHONY: skins
 
 # Build Calliope and all skins
 all: calliope allskins
@@ -73,6 +72,7 @@ all: calliope allskins
 skin: $(SKIN)
 #	cp $(DIR_SKINS)/$(SKINNAME) $(SKIN)
 
+skins: allskins
 allskins:
 	@cd $(DIR_SKINS) && $(MAKE)
 	mkdir -p $(DIR_BUILD)
