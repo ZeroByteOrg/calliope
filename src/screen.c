@@ -13,7 +13,7 @@ uint8_t numPanels;
 
 uint8_t leds_active=0;
 
-void print_list(panel* p);
+uint8_t print_list(itemlist* list, uint8_t start, uint8_t maxrows, uint8_t cols);
 void print_panel_debug();
 void leds_init();
 void leds_update();
@@ -112,37 +112,44 @@ void panel_clear(panel* p) {
 }
 
 void panel_draw(panel* p) {
-  uint8_t x=p->x;
-  uint8_t y=p->y;
-  gotoxy(x,y);
-  print_list(p);
+  uint8_t i,j;
+  gotoxy(p->x,p->y);
+  i = print_list(p->list, p->scroll, p->h, p->numCols);
+  i = p->h + p->y - i;
+  while (i>0) {
+    for(j=p->x;j<p->w+p->x;j++)
+      cprintf(" ");
+    cprintf("\n");
+    gotox(p->x);
+    --i;
+  }
   p->dirty=0;
 }
 
-void print_list(panel* p) {
-  uint8_t i,j,step;
+uint8_t print_list(itemlist* list, uint8_t start, uint8_t maxrows, uint8_t cols) {
+  uint8_t i,j,x,step;
   uint16_t n;
   char** name;
 
-  name=p->list->name;
-  step=p->list->count/p->numCols + 1;
-  gotoxy(p->x, p->y);
-  for (i=0;i<p->h;i++) {
-    n=p->scroll+i;
-    for (j=0; j<p->numCols ; j++) {
+  if (maxrows==0) return wherey();
+  name=list->name;
+  step=list->count/cols + 1;
+  x=wherex();
+  if (step-start < maxrows) maxrows=step-start;
+  for (i=0;i<maxrows;i++) {
+    n=i+start;
+    for (j=0;j<cols;j++) {
       cprintf(" ");
-      if(n<p->list->count && i+p->scroll<step) {
-        if (n==p->selection && p->active) revers(1);
+      if(n<list->count)
         cprintf("%-" STR(ITEMSIZE) "s",name[n]);
-        revers(0);
-      }
       else
         cprintf("%" STR(ITEMSIZE) "s"," ");
       n += step;
     }
     cprintf("\n");
-    gotox(p->x);
+    gotox(x);
   }
+  return wherey();
 }
 
 void panel_select(panel* p, uint8_t item) {
