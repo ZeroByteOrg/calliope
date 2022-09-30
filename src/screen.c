@@ -13,6 +13,7 @@ uint8_t numPanels;
 
 uint8_t leds_active=0;
 
+void print_blank_row();
 uint8_t print_list(itemlist* list, uint8_t start, uint8_t maxrows, uint8_t cols);
 void print_panel_debug();
 void leds_init();
@@ -83,7 +84,7 @@ void panel_init(panel* p, itemlist* l, uint8_t x, uint8_t y, uint8_t w, uint8_t 
   p->scroll=0;
   p->active=0;
   p->list=l;
-  p->row=0;
+  p->row=0;    // DELME? I don't think I'll be using these.....
   p->col=0;
   p->scroll=0;
   if (numPanels < MAX_PANELS) {
@@ -94,36 +95,33 @@ void panel_init(panel* p, itemlist* l, uint8_t x, uint8_t y, uint8_t w, uint8_t 
     ++numPanels;
   }
   panel_select(p,SEL_FIRST);
-  p->dirty=1;
+  p->dirty=DIRTY_ALL;
 }
 
 void panel_clear(panel* p) {
   uint8_t i;
-  uint8_t x=p->x;
-  uint8_t y=p->y;
 
-  gotoxy(x,y);
+  gotoxy(p->x,p->y);
   sprintf(&blankline[1],"%02us",p->w); // set the %s token in blankline as width.
-  for(i=p->h;i>=1;i--) {
-    cprintf(blankline," \n");
-    gotox(x);
-  }
-  p->dirty=0;
+  for(i=p->h;i>=1;i--)
+    print_blank_row(p->w);
+  p->dirty=DIRTY_CLEAR;
 }
 
 void panel_draw(panel* p) {
-  uint8_t i,j;
+  uint8_t i;
   gotoxy(p->x,p->y);
   i = print_list(p->list, p->scroll, p->h, p->numCols);
-  i = p->h + p->y - i;
-  while (i>0) {
-    for(j=p->x;j<p->w+p->x;j++)
-      cprintf(" ");
-    cprintf("\n");
-    gotox(p->x);
-    --i;
-  }
-  p->dirty=0;
+  for(i=p->h+p->y-i;i>=1;i--)
+    print_blank_row(p->w);
+  p->dirty=DIRTY_CLEAR;
+}
+
+void print_blank_row(uint8_t w) {
+  uint8_t x = wherex();
+  while (w-->0) cprintf(" ");
+  cprintf("\n");
+  gotox(x);
 }
 
 uint8_t print_list(itemlist* list, uint8_t start, uint8_t maxrows, uint8_t cols) {
@@ -158,6 +156,7 @@ void panel_select(panel* p, uint8_t item) {
   if (item >= p->list->count) return;   // do nothing if unused index
   if (item == p->selection) return;     // do nothing if same selected item
 
+  p->dirty |= DIRTY_SELECT;
   step = p->list->count/p->numCols + 1; // how much to +/- for moving L/R
   mod  = item % (step);                 // "row" of selected item
   scroll = p->scroll;
@@ -169,35 +168,33 @@ void panel_select(panel* p, uint8_t item) {
 
   if (scroll != p->scroll) {
     p->scroll=scroll;
-    p->dirty=1;
-  }
-  else {
-    // TODO: make code that just updates the old/new selection display
-    p->dirty=1;
+    p->dirty |= DIRTY_SCROLL;
   }
 }
 
 // placeholders - better functionality would be to just re-draw the selected item...
 void panel_activate(panel* p) {
+  // deactivate the current panel and set dirty flag to erase the selection bar
   activePanel->active=0;
-  activePanel->dirty=1;
+  activePanel->dirty|=DIRTY_SELECT;
+
   p->active=1;
-  p->dirty=1;
+  p->dirty=DIRTY_SELECT;
   activePanel=p;
 }
 
 void panel_selection_move(panel* p, char change) {
-  uint8_t step,mod,newselect;
+  uint8_t step, row, newselect;
 
   step = p->list->count/p->numCols + 1; // how much to +/- for moving L/R
-  mod  = p->selection % (step);         // "row" of selection
+  row  = p->selection % (step);         // absolute row of selection
   newselect = p->selection;             // default to current selection.
   switch (change) {
     case SEL_UP:
-      if (mod != 0) --newselect;
+      if (row != 0) --newselect;
       break;
     case SEL_DOWN:
-      if (mod+1 < p->list->count && mod+1 < step) ++newselect;
+      if (row+1 < p->list->count && row+1 < step) ++newselect;
       break;
     case SEL_LEFT:
       if (newselect - step >= 0) newselect -= step;
@@ -206,20 +203,20 @@ void panel_selection_move(panel* p, char change) {
       if (newselect + step < p->list->count) newselect += step;
       break;
     case SEL_TOP:
-      newselect -= mod; // move to top of column
+      newselect -= row; // move to top of column
       break;
     case SEL_BOTTOM:
-      newselect = newselect - mod + step - 1; // move to bottom of column
+      newselect = newselect - row + step - 1; // move to bottom of column
       if (newselect >= p->list->count) newselect = p->list->count-1;
       break;
     case SEL_PGUP:
-      if (mod - p->h >= 0)
+      if (row - p->h >= 0)
         newselect = newselect - p->h;
       else
-        newselect -= mod;
+        newselect -= row;
       break;
     case SEL_PGDN:
-      if (mod+p->h < step)
+      if (row+p->h < step)
         newselect += p->h;
       else
         newselect = step-1;
@@ -242,7 +239,7 @@ void panel_selection_move(panel* p, char change) {
 void panel_set_list(panel* p, itemlist* l) {
   p->list = l;
   panel_select(p, 0);
-  p->dirty = 1;
+  p->dirty = DIRTY_ALL;
 }
 
 void print_loading(char isloading) {

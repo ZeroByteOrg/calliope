@@ -51,6 +51,14 @@ enum selectionmoves {
   SEL_LAST
 };
 
+enum dirty_flags {
+  DIRTY_CLEAR = 0,
+  DIRTY_SCROLL = (1<<7),
+  DIRTY_SELECT = (1<<6),
+  DIRTY_PLAYING = (1<<5),
+  DIRTY_ALL = 0xFF
+};
+
 enum textcolors {
   TEXT_GREEN=6
 };
@@ -59,7 +67,7 @@ typedef struct {
   uint8_t x, y, w, h;
   uint8_t numCols;
   uint8_t scroll;
-  uint8_t row, col;
+  uint8_t row, col; // DELME? I don't think I'll be using these....
   itemlist* list;
   uint8_t selection;
   uint8_t active;
