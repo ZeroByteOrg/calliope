@@ -75,7 +75,7 @@ skin: $(SKIN)
 skins: allskins
 allskins:
 	@cd $(DIR_SKINS) && $(MAKE)
-	mkdir -p $(DIR_BUILD)
+	@mkdir -p $(DIR_BUILD)
 	cp $(DIR_SKINS)/*.SK $(DIR_BUILD)
 
 sdcard: calliope
