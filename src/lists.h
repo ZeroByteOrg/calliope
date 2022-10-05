@@ -7,7 +7,6 @@
 
 typedef struct {
   uint8_t count;
-  uint8_t namelen;
   char* name[LIST_MAX_SIZE];
 } itemlist;
 

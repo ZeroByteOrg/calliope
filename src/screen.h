@@ -68,11 +68,14 @@ typedef struct {
   uint8_t numCols;
   uint8_t scroll;
   uint8_t row, col; // DELME? I don't think I'll be using these....
-  itemlist* list;
   uint8_t selection;
   uint8_t active;
   uint8_t dirty;
+  uint8_t numdir;
+  itemlist* list;
 } panel;
+
+
 
 extern panel* activePanel;
 

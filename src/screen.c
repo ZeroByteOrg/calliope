@@ -83,7 +83,6 @@ void panel_init(panel* p, itemlist* l, uint8_t x, uint8_t y, uint8_t w, uint8_t 
   p->numCols=1;
   p->scroll=0;
   p->active=0;
-  p->list=l;
   p->row=0;    // DELME? I don't think I'll be using these.....
   p->col=0;
   p->scroll=0;
@@ -96,6 +95,8 @@ void panel_init(panel* p, itemlist* l, uint8_t x, uint8_t y, uint8_t w, uint8_t 
   }
   panel_select(p,SEL_FIRST);
   p->dirty=DIRTY_ALL;
+  p->numdir=0;
+  p->list=l;
 }
 
 void panel_clear(panel* p) {
@@ -115,6 +116,18 @@ void panel_draw(panel* p) {
   for(i=p->h+p->y-i;i>=1;i--)
     print_blank_row(p->w);
   p->dirty=DIRTY_CLEAR;
+}
+
+void viewer_draw(panel* p) {
+  uint8_t i, count, rows, dir_rows;
+  gotoxy(p->x,p->y);
+  dir_rows=p->numdir/p->numCols + 1;
+  if (p->numdir%p->numCols==0 && dir_rows>0) --dir_rows;
+  if (dir_rows-1 >= p->scroll) {
+    count=p->list->count;
+    p->list->count=p->numdir;
+    //print_list(p->list,)
+  }
 }
 
 void print_blank_row(uint8_t w) {
