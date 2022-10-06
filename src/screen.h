@@ -65,8 +65,8 @@ enum textcolors {
 
 typedef struct {
   uint8_t x, y, w, h;
-  uint8_t numCols;
-  uint8_t scroll;
+  uint8_t numCols;  // the panel is configured to display up to this many...
+  uint8_t scroll;   
   uint8_t row, col; // DELME? I don't think I'll be using these....
   uint8_t selection;
   uint8_t prevselect;
