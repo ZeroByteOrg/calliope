@@ -13,6 +13,9 @@
 extern void install_irq();
 extern void remove_irq();
 
+#define MODE_LAZY 0
+#define MODE_FULL 1
+
 panel viewer; // main area that shows file list or playlist
 panel nav;    // folder selection list
 
@@ -24,6 +27,7 @@ char message[SCR_MSG_X1-SCR_MSG_X+1];
 char init();
 void panel_selection_move(panel* p, char change);
 void select_folder(const char* folder);
+void select_zsm(const char* filename, char mode);
 void generate_reversed();
 void welcome();
 
@@ -41,6 +45,7 @@ void main() {
   };
   screen_update(0);
   welcome();
+  panel_select(&viewer,0);
   screen_update(music_playing);
   while(1) {
     if (ll_working)
@@ -94,31 +99,23 @@ void main() {
         case CH_PGDN:
           panel_selection_move(activePanel, SEL_PGDN);
           break;
+/*
         case CH_TAB:
           if (activePanel==&viewer)
             panel_activate(&nav);
           else
             panel_activate(&viewer);
           break;
+*/
         case CH_SHIFT_ENTER:
-          if (activePanel==&viewer) {
-            music_stop();
-            print_loading(1);
-            leds_forceupdate(0);
-            load(workdir.path,viewer.list->name[viewer.selection],1,(void*)0xa000);
-            print_loading(0);
-          }
-          // no break - fall through into regular ENTER
         case CH_ENTER:
-          if (activePanel==&viewer) {
-            music_start(workdir.path,viewer.list->name[viewer.selection]);
-            sprintf(message,"now playing: %s%s/%s", workdir.root,workdir.path,viewer.list->name[viewer.selection]);
-            print_msg(message);
-            leds_forceupdate(music_playing);
+          if (viewer.selection >= viewer.numdir) {
+            select_zsm(viewer.list->name[viewer.selection],(key==CH_SHIFT_ENTER));
           }
-          else if (activePanel==&nav) {
-            select_folder(nav.list->name[nav.selection]);
+          else {
+            select_folder(viewer.list->name[viewer.selection]);
           }
+          break;
       }
     }
     if (music_ended || !music_playing) {
@@ -142,13 +139,13 @@ void main() {
 }
 
 char init() {
-  uint8_t i;
+  uint8_t i, n;
 //  char* addr;
 
   cbm_k_bsout(CH_FONT_UPPER);
   workdir.depth = 0;
   workdir.path[0] = 0;
-  if (get_dir_list(&dirs)) {
+  if (get_dir_list(&files, GET_CLEAR)) {
     workdir.root[0]='/';
     workdir.root[1]=0;
   }
@@ -158,8 +155,10 @@ char init() {
     workdir.root[1]='/';
     workdir.root[2]=0;
   }
-  get_zsm_list(&files);
-  if (files.count==0 && dirs.count==0) return 0;
+  n=files.count;
+  get_zsm_list(&files, GET_APPEND);
+  if (files.count==0) return 0;
+  dirs.count = 0;
   player_init();
 
   videomode(VIDEOMODE_80x30);
@@ -182,9 +181,9 @@ char init() {
   panel_init(&viewer, &files, SCR_VIEWER_X,SCR_VIEWER_Y,SCR_VIEWER_W,SCR_VIEWER_H);
   panel_init(&nav, &dirs, SCR_NAV_X,SCR_NAV_Y,SCR_NAV_W,SCR_NAV_H);
   viewer.numCols=3;
-  if (files.count) panel_activate(&viewer);
-  else panel_activate(&nav);
-
+  viewer.numdir=n;
+  panel_activate(&viewer);
+  panel_select(&viewer, 0);
 
   VERA.control |= 2;
   VERA.display.hstop = 632>>2;
@@ -229,6 +228,7 @@ void welcome(){
   panel_select(&viewer, SEL_FIRST);
   if (files.count >= 1) panel_activate(&viewer);
   clear_msg();
+  viewer.dirty = DIRTY_ALL;
 }
 
 void select_folder(const char* folder) {
@@ -249,11 +249,27 @@ void select_folder(const char* folder) {
     strcat(workdir.path,folder);
     ++workdir.depth;
   }
-  get_dir_list(&dirs);
-  get_zsm_list(&files);
+  get_dir_list(&files, GET_CLEAR);
+  viewer.numdir=files.count;
+  get_zsm_list(&files, GET_APPEND);
   print_path();
   panel_set_list(&nav,&dirs);
   panel_set_list(&viewer,&files);
   if(files.count > 0 && dirs.count < 2)
     panel_activate(&viewer);
+}
+
+void select_zsm(const char* filename, char mode) {
+
+  if (mode==MODE_FULL) {
+    music_stop();
+    print_loading(1);
+    leds_forceupdate(0);
+    load(workdir.path,filename,1,(void*)0xa000);
+    print_loading(0);
+  }
+  music_start(workdir.path,filename);
+  sprintf(message,"now playing: %s%s/%s", workdir.root,workdir.path,filename);
+  print_msg(message);
+  leds_forceupdate(music_playing);
 }

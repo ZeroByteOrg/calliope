@@ -16,7 +16,7 @@ extern uint8_t music_get_ym_chanmask();
 
 extern void music_start_opening();
 
-extern char music_start(char* path, char* filename);
+extern char music_start(const char* path, const char* filename);
 extern void music_stop();
 
 extern void __fastcall__ ym_init();

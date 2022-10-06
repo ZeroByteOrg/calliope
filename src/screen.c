@@ -37,12 +37,10 @@ void screen_init() {
 
 
 void screen_update(uint8_t music_playing) {
-  char i, a;
+  char i;
   leds_update(music_playing);
   for (i=0;i<numPanels;i++) {
     if (panels[i]->dirty) panel_draw(panels[i]);
-    //panel_draw(panels[i]);
-    if(panels[i]==activePanel) a=i;
   }
 }
 
@@ -93,7 +91,8 @@ void panel_init(panel* p, itemlist* l, uint8_t x, uint8_t y, uint8_t w, uint8_t 
     }
     ++numPanels;
   }
-  panel_select(p,SEL_FIRST);
+  panel_select(p,0);
+  p->prevselect=0;
   p->dirty=DIRTY_ALL;
   p->numdir=0;
   p->list=l;
@@ -110,14 +109,41 @@ void panel_clear(panel* p) {
 }
 
 void panel_draw(panel* p) {
-  uint8_t i;
-  gotoxy(p->x,p->y);
-  i = print_list(p->list, p->scroll, p->h, p->numCols);
-  for(i=p->h+p->y-i;i>=1;i--)
-    print_blank_row(p->w);
+  uint8_t i, rows, mod;
+  rows=p->list->count/p->numCols;
+  mod=p->list->count%p->numCols;
+  if (mod) ++rows;
+  if (p->dirty & DIRTY_SCROLL) {
+    gotoxy(p->x,p->y);
+    i = print_list(p->list, p->scroll, p->h, p->numCols);
+    for(i=p->h+p->y-i;i>=1;i--)
+      print_blank_row(p->w);
+    p->dirty |= DIRTY_SELECT;
+  }
+  else if (p->dirty & DIRTY_SELECT) {
+    // clear the highlight bar if no scrolling
+    gotoxy(
+      p->x+p->prevselect/rows*(ITEMSIZE+1)+1,
+      p->y+p->prevselect%rows-p->scroll
+    );
+    cprintf("%-" STR(ITEMSIZE) "s",p->list->name[p->prevselect]);
+  }
+  if (p->dirty & DIRTY_SELECT) {
+    // draw the highlight bar
+    gotoxy(
+      p->x+p->selection/rows*(ITEMSIZE+1)+1,
+      p->y+p->selection%rows-p->scroll
+    );
+    revers(1);
+    cprintf("%-" STR(ITEMSIZE) "s",p->list->name[p->selection]);
+    revers(0);
+    p->prevselect=p->selection;
+  }
   p->dirty=DIRTY_CLEAR;
 }
 
+#if(0)
+// not using this code for now.
 void viewer_draw(panel* p) {
   uint8_t i, count, rows, dir_rows;
   gotoxy(p->x,p->y);
@@ -129,6 +155,7 @@ void viewer_draw(panel* p) {
     //print_list(p->list,)
   }
 }
+#endif
 
 void print_blank_row(uint8_t w) {
   uint8_t x = wherex();
@@ -144,15 +171,17 @@ uint8_t print_list(itemlist* list, uint8_t start, uint8_t maxrows, uint8_t cols)
 
   if (maxrows==0) return wherey();
   name=list->name;
-  step=list->count/cols + 1;
+  step=list->count/cols;
+  if (list->count%cols) ++step;
   x=wherex();
   if (step-start < maxrows) maxrows=step-start;
   for (i=0;i<maxrows;i++) {
     n=i+start;
     for (j=0;j<cols;j++) {
       cprintf(" ");
-      if(n<list->count)
+      if(n<list->count) {
         cprintf("%-" STR(ITEMSIZE) "s",name[n]);
+      }
       else
         cprintf("%" STR(ITEMSIZE) "s"," ");
       n += step;
@@ -164,7 +193,8 @@ uint8_t print_list(itemlist* list, uint8_t start, uint8_t maxrows, uint8_t cols)
 }
 
 void panel_select(panel* p, uint8_t item) {
-  uint8_t step, mod, scroll;
+  uint8_t step, mod;
+  int scroll, maxscroll;
 
   if (item >= p->list->count) return;   // do nothing if unused index
   if (item == p->selection) return;     // do nothing if same selected item
@@ -173,12 +203,21 @@ void panel_select(panel* p, uint8_t item) {
   step = p->list->count/p->numCols + 1; // how much to +/- for moving L/R
   mod  = item % (step);                 // "row" of selected item
   scroll = p->scroll;
+  maxscroll = step - p->h;              // amount to put last row at bottom
+  if (maxscroll < 0) maxscroll=0;       // if the list is long enough.
   p->selection=item;
-  if (mod < scroll)
-    scroll = mod;
-  else if (mod >= p->h + scroll - 1)
-    scroll = mod - p->h + 1;
-
+  // scroll up or down as needed to keep the selection at least 2 rows away
+  // from the top/bottom of the panel...
+  if (mod < scroll + 2)
+    scroll = mod - 2;
+  else if (mod - scroll >= p->h-3)
+    //scroll = mod + 2 - p->h - 1;
+    scroll = mod + 3 - p->h;
+  // constrain scrolling such that there are never blank rows at the top
+  // and scrolling down stops whenever the last row is visible at the end
+  // of the panel
+  if (scroll >= maxscroll) scroll = maxscroll;
+  if (scroll < 0) scroll=0;
   if (scroll != p->scroll) {
     p->scroll=scroll;
     p->dirty |= DIRTY_SCROLL;
@@ -192,14 +231,15 @@ void panel_activate(panel* p) {
   activePanel->dirty|=DIRTY_SELECT;
 
   p->active=1;
-  p->dirty=DIRTY_SELECT;
+  p->dirty|=DIRTY_SELECT;
   activePanel=p;
 }
 
 void panel_selection_move(panel* p, char change) {
   uint8_t step, row, newselect;
 
-  step = p->list->count/p->numCols + 1; // how much to +/- for moving L/R
+  step = p->list->count/p->numCols;     // how much to +/- for moving L/R
+  if (p->list->count%p->numCols) ++step;
   row  = p->selection % (step);         // absolute row of selection
   newselect = p->selection;             // default to current selection.
   switch (change) {
@@ -232,10 +272,10 @@ void panel_selection_move(panel* p, char change) {
       if (row+p->h < step)
         newselect += p->h;
       else
-        newselect = step-1;
+        newselect += step-1-row;
       if (newselect >= p->list->count) newselect = p->list->count-1;
-      p->scroll += p->h + 1;
-      if (p->scroll >= step-1) p->scroll=step-1;
+      //p->scroll += p->h + 1;
+      //if (p->scroll >= step-1) p->scroll=step-1;
       break;
     case SEL_FIRST:
       newselect = 0;

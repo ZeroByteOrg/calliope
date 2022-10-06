@@ -64,10 +64,10 @@ signed char chdir(const char* dirname) {
   return (cmd_buffer[0]=='0' && cmd_buffer[1]=='0');
 }
 
-void get_zsm_list(itemlist* list) {
+void get_zsm_list(itemlist* list, char append) {
   struct cbm_dirent item;
   char l;
-	list_clear(list);
+	if (!append) list_clear(list);
   if (!cbm_opendir(1,8)) {
     if (!cbm_readdir(1,&item)) { // read but ignore volume header info
       while(!cbm_readdir(1,&item)) {
@@ -82,11 +82,11 @@ void get_zsm_list(itemlist* list) {
   }
 }
 
-signed char get_dir_list(itemlist* list) {
+signed char get_dir_list(itemlist* list, char append) {
   struct cbm_dirent item;
   signed char root = 1;
 
-	list_clear(list);
+	if (!append) list_clear(list);
   if (!cbm_opendir(1,8)) {
     if (!cbm_readdir(1,&item)) { // read but ignore volume header info
       while(!cbm_readdir(1,&item)) {

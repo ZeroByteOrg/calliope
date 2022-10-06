@@ -20,7 +20,7 @@
 #define SCR_VIEWER_X 21
 #define SCR_VIEWER_Y 8
 #define SCR_VIEWER_W ((3*ITEMSIZE + 3) + 6)
-#define SCR_VIEWER_H 20
+#define SCR_VIEWER_H 10
 #define SCR_NAV_X 1
 #define SCR_NAV_Y 6
 #define SCR_NAV_W (ITEMSIZE)
@@ -69,6 +69,7 @@ typedef struct {
   uint8_t scroll;
   uint8_t row, col; // DELME? I don't think I'll be using these....
   uint8_t selection;
+  uint8_t prevselect;
   uint8_t active;
   uint8_t dirty;
   uint8_t numdir;

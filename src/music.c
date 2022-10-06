@@ -37,7 +37,7 @@ void player_update() {
   }
 }
 
-char music_start(char* path, char* filename) {
+char music_start(const char* path, const char* filename) {
   if (music_playing) {
     zsm_stopmusic();
   }
