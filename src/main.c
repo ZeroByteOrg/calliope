@@ -176,7 +176,7 @@ char init() {
   for(i=0;i<14;i++) {
      ((char*)0x9f2d)[i] = lyr_settings[i];
   }
-  VERA.display.video = 0x31;
+  VERA.display.video = VERA.display.video & 0x0f | 0x30;
   screen_init();
   panel_init(&viewer, &files, SCR_VIEWER_X,SCR_VIEWER_Y,SCR_VIEWER_W,SCR_VIEWER_H);
   panel_init(&nav, &dirs, SCR_NAV_X,SCR_NAV_Y,SCR_NAV_W,SCR_NAV_H);

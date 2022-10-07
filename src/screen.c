@@ -14,7 +14,7 @@ uint8_t numPanels;
 uint8_t leds_active=0;
 
 void print_blank_row();
-uint8_t print_list(itemlist* list, uint8_t start, uint8_t maxrows, uint8_t cols);
+uint8_t print_list(itemlist* list, uint8_t start, uint8_t maxrows, uint8_t cols, uint8_t numfolder);
 void print_panel_debug();
 void leds_init();
 void leds_update();
@@ -110,32 +110,36 @@ void panel_clear(panel* p) {
 
 void panel_draw(panel* p) {
   uint8_t i, rows, mod;
+  char foldermark;
+
   rows=p->list->count/p->numCols;
   mod=p->list->count%p->numCols;
   if (mod) ++rows;
   if (p->dirty & DIRTY_SCROLL) {
     gotoxy(p->x,p->y);
-    i = print_list(p->list, p->scroll, p->h, p->numCols);
+    i = print_list(p->list, p->scroll, p->h, p->numCols, p->numdir);
     for(i=p->h+p->y-i;i>=1;i--)
       print_blank_row(p->w);
     p->dirty |= DIRTY_SELECT;
   }
   else if (p->dirty & DIRTY_SELECT) {
     // clear the highlight bar if no scrolling
+    foldermark=(p->prevselect<p->numdir)?'Z':' ';
     gotoxy(
-      p->x+p->prevselect/rows*(ITEMSIZE+1)+1,
+      p->x+p->prevselect/rows*(ITEMSIZE+2)+1,
       p->y+p->prevselect%rows-p->scroll
     );
-    cprintf("%-" STR(ITEMSIZE) "s",p->list->name[p->prevselect]);
+    cprintf("%c%-" STR(ITEMSIZE) "s",foldermark,p->list->name[p->prevselect]);
   }
   if (p->dirty & DIRTY_SELECT) {
     // draw the highlight bar
+    foldermark=(p->selection<p->numdir)?'Z':' ';
     gotoxy(
-      p->x+p->selection/rows*(ITEMSIZE+1)+1,
+      p->x+p->selection/rows*(ITEMSIZE+2)+1,
       p->y+p->selection%rows-p->scroll
     );
     revers(1);
-    cprintf("%-" STR(ITEMSIZE) "s",p->list->name[p->selection]);
+    cprintf("%c%-" STR(ITEMSIZE) "s",foldermark,p->list->name[p->selection]);
     revers(0);
     p->prevselect=p->selection;
   }
@@ -152,7 +156,6 @@ void viewer_draw(panel* p) {
   if (dir_rows-1 >= p->scroll) {
     count=p->list->count;
     p->list->count=p->numdir;
-    //print_list(p->list,)
   }
 }
 #endif
@@ -164,7 +167,7 @@ void print_blank_row(uint8_t w) {
   gotox(x);
 }
 
-uint8_t print_list(itemlist* list, uint8_t start, uint8_t maxrows, uint8_t cols) {
+uint8_t print_list(itemlist* list, uint8_t start, uint8_t maxrows, uint8_t cols, uint8_t numfolder) {
   uint8_t i,j,x,step;
   uint16_t n;
   char** name;
@@ -178,7 +181,8 @@ uint8_t print_list(itemlist* list, uint8_t start, uint8_t maxrows, uint8_t cols)
   for (i=0;i<maxrows;i++) {
     n=i+start;
     for (j=0;j<cols;j++) {
-      cprintf(" ");
+      if (n<numfolder) cprintf(" Z");
+      else cprintf ("  ");
       if(n<list->count) {
         cprintf("%-" STR(ITEMSIZE) "s",name[n]);
       }
