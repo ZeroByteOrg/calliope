@@ -39,7 +39,7 @@ DITTY = $(DIR_BUILD)/OPENING.BIN
 
 # Main target to build the program and its skin data.
 .phony: calliope
-calliope: $(TARGET) $(SKIN) $(DITTY)
+calliope: $(TARGET) skin $(DITTY)
 
 .PHONY: help
 help:
@@ -74,9 +74,9 @@ skin: $(SKIN)
 
 skins: allskins
 allskins:
-	@cd $(DIR_SKINS) && $(MAKE)
-	mkdir -p $(DIR_BUILD)
-	cp $(DIR_SKINS)/*.SK $(DIR_BUILD)
+	@cd $(DIR_SKINS) && $(MAKE) all
+	@mkdir -p $(DIR_BUILD)
+	cp $(DIR_SKINS)/*.SK $(DIR_BUILD)/
 
 sdcard: calliope
 	mcopy -o $(TARGET) $(MPATH)/$(PROGNAME)
@@ -86,7 +86,7 @@ sdcard: calliope
 autoboot: sdcard
 	mcopy -o $(TARGET) $(MPATH)/AUTOBOOT.X16
 
-sdskins: skins
+sdskins: skins $(SKIN)
 	mcopy -o $(DIR_SKINS)/*.SK $(MPATH)/
 
 # Build CALLIOPE.PRG
@@ -95,6 +95,12 @@ $(TARGET): $(SRCS) $(INCS) $(LIBZSOUND) $(ZSOUND_INCS)
 	cl65 $(FLAGS) $(FLAGS_ZSOUND) -O -o $@ $(SRCS) $(LIBZSOUND)
 
 # Build DEFAULT.SK from the skin named in $SKINNAME
+#$(SKIN):
+skin:
+	@cd $(DIR_SKINS) && make $(SKINNAME)
+	@mkdir -p $(DIR_BUILD)
+	cp $(DIR_SKINS)/$(SKINNAME) $(SKIN)
+
 $(SKIN): $(DIR_SKINS)/$(SKINNAME)
 	@mkdir -p $(DIR_BUILD)
 	cp $< $@
@@ -104,23 +110,18 @@ $(DITTY): $(DIR_SKINS)/$(SKINNAME:%.SK=%)/intro.zsm
 	@mkdir -p $(DIR_BUILD)
 	cp $< $@
 
-# Buld a specific skin by name
+# # Buld a specific skin by name
 $(DIR_SKINS)/$(SKINNAME):
-	@cd $(DIR_SKINS) && $(MAKE) $(SKINNAME)
+	@cd $(DIR_SKINS) && make $(SKINNAME)
 
 # Don't require building a .zsm file
 .PHONY $(DIR_SKINS)/$(SKINNAME:%.SK=%)/intro.zsm:
 
-#media: $(MEDIA)
-
 clean:
-	@rm -f $(DIR_BUILD)/*
-	@rm -f $(SYM)
-	@rm -f src/*.o src/*.s
+	rm -f $(DIR_BUILD)/*
+	rm -f $(SYM)
+	rm -f src/*.o src/*.s
 	@cd skins && $(MAKE) clean
-
-#mediaclean:
-#	rm -rf $(DIR_BUILD)*
 
 libclean:
 	rm -f zsound/*

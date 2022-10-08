@@ -12,7 +12,6 @@ GRAPHICS := $(BG) $(LED) $(FONT)
 GFXBIN   := $(GRAPHICS:%.png=%.bin)
 PALETTE  := $(GRAPHICS:%.png=%.pal)
 
-.PHONY: all
 all: $(addsuffix .SK,$(SKINS))
 	@echo All skins complete.
 	@rm -f $(GFXBIN) $(PALETTE)
@@ -22,7 +21,7 @@ clean:
 	@rm -f $(GFXBIN)
 	@rm -f $(PALETTE)
 
-%.SK:
+%.SK: %/$(FONT) %/$(BG) %/$(LED)
 	$(eval DIR   := $(patsubst %.SK,%/,$@))
 	$(eval _BG   := $(addprefix $(DIR),$(BG)))
 	$(eval _FONT := $(addprefix $(DIR),$(FONT)))

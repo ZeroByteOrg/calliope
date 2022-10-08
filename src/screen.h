@@ -19,12 +19,12 @@
 #define SCR_PLAY_ADDR_Y 3
 #define SCR_VIEWER_X 21
 #define SCR_VIEWER_Y 8
-#define SCR_VIEWER_W ((3*ITEMSIZE + 3) + 6)
-#define SCR_VIEWER_H 10
+#define SCR_VIEWER_W 56
+#define SCR_VIEWER_H 18
 #define SCR_NAV_X 1
 #define SCR_NAV_Y 6
-#define SCR_NAV_W (ITEMSIZE)
-#define SCR_NAV_H (SCR_VIEWER_H)
+#define SCR_NAV_W 17
+#define SCR_NAV_H 20
 #define SCR_PATH_X 21
 #define SCR_PATH_Y 6
 #define SCR_PATH_X1 76
@@ -66,7 +66,7 @@ enum textcolors {
 typedef struct {
   uint8_t x, y, w, h;
   uint8_t numCols;  // the panel is configured to display up to this many...
-  uint8_t scroll;   
+  uint8_t scroll;
   uint8_t row, col; // DELME? I don't think I'll be using these....
   uint8_t selection;
   uint8_t prevselect;
