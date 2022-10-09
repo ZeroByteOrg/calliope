@@ -44,6 +44,7 @@ void main() {
     return;
   };
   screen_update(0);
+
   welcome();
   panel_select(&viewer,0);
   screen_update(music_playing);
@@ -185,14 +186,13 @@ char init() {
   panel_activate(&viewer);
   panel_select(&viewer, 0);
 
-  VERA.control |= 2;
-  VERA.display.hstop = 632>>2;
-  VERA.control ^= 2;
+//  VERA.control |= 2;
+//  VERA.display.hstop = 632>>2;
+//  VERA.control ^= 2;
   install_irq();
   VERA.irq_raster = 0;
   VERA.irq_enable = VERA.irq_enable | 2 & 0x7F;
   music_start_opening(1,0xa000);
-
   return 1;
 }
 

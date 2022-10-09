@@ -41,6 +41,7 @@ void screen_update(uint8_t music_playing) {
   leds_update(music_playing);
   for (i=0;i<numPanels;i++) {
     if (panels[i]->dirty) panel_draw(panels[i]);
+    while(!kbhit()) {}
   }
 }
 
