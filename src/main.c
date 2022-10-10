@@ -178,6 +178,17 @@ char init() {
      ((char*)0x9f2d)[i] = lyr_settings[i];
   }
   VERA.display.video = (VERA.display.video & 0x0f) | 0x30;
+  // Composite scaling patch for Dave's demo:
+  if ((VERA.display.video & 0x03)>=2) {
+    VERA.control = 2;
+    VERA.display.hstart = 0x09; // 09
+    VERA.display.hstop  = 0x92; // 146
+    VERA.display.vstart = 0x07; // 07
+    VERA.display.vstop  = 0xe6; // 230
+    VERA.control = 0;
+    VERA.display.hscale = 0x94; // 148
+    VERA.display.vscale = 0x45; // 69
+  }
   screen_init();
   panel_init(&viewer, &files, SCR_VIEWER_X,SCR_VIEWER_Y,SCR_VIEWER_W,SCR_VIEWER_H);
   panel_init(&nav, &dirs, SCR_NAV_X,SCR_NAV_Y,SCR_NAV_W,SCR_NAV_H);
@@ -191,6 +202,7 @@ char init() {
   VERA.control ^= 2;
   install_irq();
   VERA.irq_raster = 0;
+  if ((VERA.display.video & 0x03)>=2) VERA.irq_raster = 10;
   VERA.irq_enable = VERA.irq_enable | 2 & 0x7F;
   music_start_opening(1,0xa000);
 
