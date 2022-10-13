@@ -34,6 +34,7 @@ MACPTR := $FF44
 	tax
 	jsr popa
 	ply
+	clc
 	jsr MACPTR
 	bcs macptr_unsupported
 macptr_success:
